@@ -37,7 +37,7 @@ result = model.predict(test_vector)
 
 print(f"মেসেজটি হলো: {result[0]}")
 
-install streamlit
+
 
 # Commented out IPython magic to ensure Python compatibility.
 # %%writefile app.py
