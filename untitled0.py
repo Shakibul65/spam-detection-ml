@@ -16,9 +16,8 @@ st.markdown("""
     .stApp {
         background-color: #f8f9fa;
     }
-    /* হেডার বক্স - মার্জিত গাঢ় রঙ */
     .header-box {
-        background-color: #2c3e50; /* Slate Blue-Grey */
+        background-color: #2c3e50; 
         color: #ffffff;
         padding: 30px;
         border-radius: 15px;
@@ -26,7 +25,6 @@ st.markdown("""
         box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         margin-bottom: 25px;
     }
-    /* বাটন ডিজাইন */
     .stButton>button {
         background-color: #2c3e50;
         color: white;
@@ -39,29 +37,25 @@ st.markdown("""
     }
     .stButton>button:hover {
         background-color: #34495e;
-        border: none;
         color: #ecf0f1;
-    }
-    /* ইনপুট ফিল্ড */
-    .stTextArea>div>div>textarea {
-        border-radius: 10px;
-        border: 1px solid #bdc3c7;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# ৩. সাইড বার
+# ৩. সাইড বার (এখানে আপনার রিকোয়েস্ট অনুযায়ী পরিবর্তন করা হয়েছে)
 with st.sidebar:
     st.markdown("### 👨‍💻 Developer Profile")
-    st.info("**Shakibul Hasan**\n\nCSE Graduate & Freelancer")
+    # "CSE Graduate" পরিবর্তন করে "CSE Student" করা হলো
+    st.info("**Shakibul Hasan**\n\nCSE Student & Freelancer") 
     st.markdown("---")
-    st.write("এই টুলটি মেশিন লার্নিং ব্যবহার করে টেক্সট বিশ্লেষণ করে।")
+    st.write("Jamalpur, Bangladesh")
+    st.write("এই টুলটি মেশিন লার্নিং ব্যবহার করে স্প্যাম মেসেজ শনাক্ত করে।")
 
 # ৪. হেডার
 st.markdown("""
     <div class="header-box">
         <h1 style='font-size: 40px; margin-bottom: 10px;'>🛡️ Pro Email Spam Shield</h1>
-        <p style='font-size: 18px; opacity: 0.8;'>Advanced Machine Learning Security System</p>
+        <p style='font-size: 18px; opacity: 0.8;'>AI-Powered Security System | Student Project</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -80,7 +74,7 @@ model.fit(X, df['label'])
 
 # ৭. ইউজার ইন্টারফেস
 st.markdown("### 🔍 Analyze Message")
-user_input = st.text_area("", placeholder="আপনার মেসেজটি এখানে পেস্ট করুন...", height=150)
+user_input = st.text_area("", placeholder="টেস্ট মেসেজটি এখানে পেস্ট করুন...", height=150)
 
 col1, col2, col3 = st.columns([1,1,1])
 with col2:
@@ -91,12 +85,12 @@ with col2:
             
             st.markdown("---")
             if prediction[0] == 'spam':
-                st.error("🚨 **RESULT: SPAM DETECTED**\n\nএটি একটি সম্ভাব্য ক্ষতিকারক মেসেজ।")
+                st.error("🚨 **RESULT: SPAM DETECTED**")
             else:
-                st.success("✅ **RESULT: SAFE MESSAGE**\n\nএটি একটি নিরাপদ মেসেজ।")
+                st.success("✅ **RESULT: SAFE MESSAGE**")
         else:
             st.warning("অনুগ্রহ করে কিছু লিখুন।")
 
 # ৮. ফুটার
 st.markdown("<br><hr>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #7f8c8d;'>Developed by Shakibul Hasan | Jamalpur, Bangladesh</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #7f8c8d;'>Developed by Shakibul Hasan | CSE Student</p>", unsafe_allow_html=True)
