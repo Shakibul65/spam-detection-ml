@@ -10,7 +10,7 @@ st.set_page_config(
     layout="wide"
 )
 
-# ২. কাস্টম সিএসএস (আরামদায়ক ডার্ক থিম)
+# ২. কাস্টম সিএসএস (আরামদায়ক থিম)
 st.markdown("""
     <style>
     .stApp {
@@ -42,20 +42,19 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# ৩. সাইড বার (এখানে আপনার রিকোয়েস্ট অনুযায়ী পরিবর্তন করা হয়েছে)
+# ৩. সাইড বার
 with st.sidebar:
     st.markdown("### 👨‍💻 Developer Profile")
-    # "CSE Graduate" পরিবর্তন করে "CSE Student" করা হলো
-    st.info("**Shakibul Hasan**\n\nCSE Student & Freelancer") 
+    st.info("**Shakibul Hasan**\n\nCSE Student & Freelancer")
     st.markdown("---")
     st.write("Jamalpur, Bangladesh")
-    st.write("এই টুলটি মেশিন লার্নিং ব্যবহার করে স্প্যাম মেসেজ শনাক্ত করে।")
+    st.write("এই টুলটি মেশিন লার্নিং (Naive Bayes) অ্যালগরিদম ব্যবহার করে।")
 
-# ৪. হেডার
+# ৪. হেডার (এখানে আপনার রিকোয়েস্ট অনুযায়ী পরিবর্তন করা হয়েছে)
 st.markdown("""
     <div class="header-box">
         <h1 style='font-size: 40px; margin-bottom: 10px;'>🛡️ Pro Email Spam Shield</h1>
-        <p style='font-size: 18px; opacity: 0.8;'>AI-Powered Security System | Student Project</p>
+        <p style='font-size: 18px; opacity: 0.8;'>Machine Learning Powered Security | Student Project</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -72,9 +71,9 @@ X = cv.fit_transform(df['text'])
 model = MultinomialNB()
 model.fit(X, df['label'])
 
-# ৭. ইউজার ইন্টারফেস
+# ৭. ইউজার ইনপুট
 st.markdown("### 🔍 Analyze Message")
-user_input = st.text_area("", placeholder="টেস্ট মেসেজটি এখানে পেস্ট করুন...", height=150)
+user_input = st.text_area("", placeholder="আপনার মেসেজটি এখানে লিখুন...", height=150)
 
 col1, col2, col3 = st.columns([1,1,1])
 with col2:
@@ -93,4 +92,4 @@ with col2:
 
 # ৮. ফুটার
 st.markdown("<br><hr>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #7f8c8d;'>Developed by Shakibul Hasan | CSE Student</p>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #7f8c8d;'>Developed by Shakibul Hasan | Machine Learning Project</p>", unsafe_allow_html=True)
