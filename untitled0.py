@@ -10,43 +10,58 @@ st.set_page_config(
     layout="wide"
 )
 
-# ২. কাস্টম সিএসএস (CSS) - এখানে এররটি ছিল, আমি ঠিক করে দিয়েছি
+# ২. কাস্টম সিএসএস (আরামদায়ক ডার্ক থিম)
 st.markdown("""
     <style>
-    .main {
-        background-color: #f0f2f6;
+    .stApp {
+        background-color: #f8f9fa;
     }
+    /* হেডার বক্স - মার্জিত গাঢ় রঙ */
+    .header-box {
+        background-color: #2c3e50; /* Slate Blue-Grey */
+        color: #ffffff;
+        padding: 30px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+    }
+    /* বাটন ডিজাইন */
     .stButton>button {
-        background-color: #1a1aff;
+        background-color: #2c3e50;
         color: white;
-        border-radius: 20px;
+        border-radius: 12px;
         font-weight: bold;
         width: 100%;
-        height: 3em;
+        height: 3.5em;
+        border: none;
+        transition: 0.3s;
     }
-    .header-box {
-        background-color: #1a1aff;
-        color: white;
-        padding: 20px;
+    .stButton>button:hover {
+        background-color: #34495e;
+        border: none;
+        color: #ecf0f1;
+    }
+    /* ইনপুট ফিল্ড */
+    .stTextArea>div>div>textarea {
         border-radius: 10px;
-        text-align: center;
+        border: 1px solid #bdc3c7;
     }
     </style>
     """, unsafe_allow_html=True)
 
 # ৩. সাইড বার
 with st.sidebar:
-    st.markdown("## Developed By")
-    st.markdown("👨‍💻 **Shakibul Hasan**")
-    st.markdown("🎓 **CSE Graduate**")
+    st.markdown("### 👨‍💻 Developer Profile")
+    st.info("**Shakibul Hasan**\n\nCSE Graduate & Freelancer")
     st.markdown("---")
-    st.info("AI ব্যবহার করে স্প্যাম শনাক্তকরণ।")
+    st.write("এই টুলটি মেশিন লার্নিং ব্যবহার করে টেক্সট বিশ্লেষণ করে।")
 
 # ৪. হেডার
 st.markdown("""
     <div class="header-box">
-        <h1>🛡️ Pro Email Spam Shield</h1>
-        <p>AI-Powered Security | Verify Your Messages</p>
+        <h1 style='font-size: 40px; margin-bottom: 10px;'>🛡️ Pro Email Spam Shield</h1>
+        <p style='font-size: 18px; opacity: 0.8;'>Advanced Machine Learning Security System</p>
     </div>
     """, unsafe_allow_html=True)
 
@@ -63,22 +78,25 @@ X = cv.fit_transform(df['text'])
 model = MultinomialNB()
 model.fit(X, df['label'])
 
-# ৭. ইউজার ইনপুট
-st.markdown("---")
-user_input = st.text_area("মেসেজটি এখানে লিখুন:", placeholder="উদাঃ You won a prize...")
+# ৭. ইউজার ইন্টারফেস
+st.markdown("### 🔍 Analyze Message")
+user_input = st.text_area("", placeholder="আপনার মেসেজটি এখানে পেস্ট করুন...", height=150)
 
-if st.button("Analyze Security"):
-    if user_input:
-        vect = cv.transform([user_input])
-        prediction = model.predict(vect)
-        
-        if prediction[0] == 'spam':
-            st.error("🚨 সতর্কবার্তা! এটি একটি স্প্যাম মেসেজ।")
+col1, col2, col3 = st.columns([1,1,1])
+with col2:
+    if st.button("Run Security Scan"):
+        if user_input:
+            vect = cv.transform([user_input])
+            prediction = model.predict(vect)
+            
+            st.markdown("---")
+            if prediction[0] == 'spam':
+                st.error("🚨 **RESULT: SPAM DETECTED**\n\nএটি একটি সম্ভাব্য ক্ষতিকারক মেসেজ।")
+            else:
+                st.success("✅ **RESULT: SAFE MESSAGE**\n\nএটি একটি নিরাপদ মেসেজ।")
         else:
-            st.success("✅ এটি একটি নিরাপদ মেসেজ।")
-    else:
-        st.warning("অনুগ্রহ করে কিছু লিখুন।")
+            st.warning("অনুগ্রহ করে কিছু লিখুন।")
 
 # ৮. ফুটার
-st.markdown("---")
-st.caption("Developed by Shakibul Hasan | All Rights Reserved © 2026")
+st.markdown("<br><hr>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; color: #7f8c8d;'>Developed by Shakibul Hasan | Jamalpur, Bangladesh</p>", unsafe_allow_html=True)
