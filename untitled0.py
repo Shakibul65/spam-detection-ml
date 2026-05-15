@@ -3,93 +3,107 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 
-# 1. Page Configuration
+# ১. আধুনিক পেজ সেটআপ (Responsive Layout)
 st.set_page_config(
-    page_title="Pro Spam Shield | Shakibul Hasan",
+    page_title="SpamGuard AI",
     page_icon="🛡️",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# 2. Custom CSS
+# ২. কাস্টম সিএসএস (UI ডিজাইন উন্নত করার জন্য)
 st.markdown("""
     <style>
-    .stApp {
-        background-color: #f8f9fa;
-    }
-    .header-box {
-        background-color: #2c3e50; 
-        color: #ffffff;
-        padding: 30px;
-        border-radius: 15px;
-        text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        margin-bottom: 25px;
+    .main {
+        background-color: #f5f7f9;
     }
     .stButton>button {
-        background-color: #2c3e50;
-        color: white;
-        border-radius: 12px;
-        font-weight: bold;
         width: 100%;
-        height: 3.5em;
-        border: none;
+        border-radius: 5px;
+        height: 3em;
+        background-color: #007bff;
+        color: white;
+        font-weight: bold;
+    }
+    .stTextArea>div>div>textarea {
+        background-color: #ffffff;
+        border-radius: 10px;
+    }
+    .result-box {
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        font-size: 20px;
+        font-weight: bold;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# 3. Sidebar (English only)
+# ৩. সাইডবার (Professional Branding)
 with st.sidebar:
-    st.markdown("### 👨‍💻 Developer Profile")
-    st.info("**Shakibul Hasan**\n\nCSE Student & Freelancer")
+    st.title("🛡️ SpamGuard AI")
     st.markdown("---")
+    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=80)
+    st.subheader("Developer Details")
+    st.write("**Name:** Shakibul Hasan")
+    st.caption("CSE Graduate | Professional Freelancer")
     st.write("📍 Jamalpur, Bangladesh")
-    st.write("This tool uses Machine Learning to detect spam messages.")
+    st.markdown("---")
+    st.info("এই AI টুলটি আপনার টেক্সট বিশ্লেষণ করে সম্ভাব্য ফিশিং বা স্প্যাম শনাক্ত করতে পারে।")
 
-# 4. Header (English only)
-st.markdown("""
-    <div class="header-box">
-        <h1 style='font-size: 35px; margin-bottom: 10px;'>🛡️ Pro Email Spam Shield</h1>
-        <p style='font-size: 18px; opacity: 0.8;'>Machine Learning Powered Security | Student Project</p>
-    </div>
-    """, unsafe_allow_html=True)
+# ৪. মেইন সেকশন ডিজাইন
+col1, col2 = st.columns([2, 1])
 
-# 5. Training Data
-data = {
-    'text': ['Free money now', 'Hi, how are you?', 'Claim prize', 'Meeting at 10am', 'urgent account verification'],
-    'label': ['spam', 'ham', 'spam', 'ham', 'spam']
-}
-df = pd.DataFrame(data)
+with col1:
+    st.title("🚀 Smart Spam Detection System")
+    st.write("নিচে আপনার ইমেইল বা মেসেজটি পেস্ট করুন এবং দেখুন আমাদের AI মডেল এটি সম্পর্কে কী বলে।")
+    
+    user_input = st.text_area("", height=200, placeholder="আপনার মেসেজ এখানে লিখুন (যেমন: লটারি জেতা বা সাধারণ হাই-হ্যালো)...")
+    
+    # ডেটা এবং মডেল (অল্প ডেটা হলেও স্ট্রাকচার শক্তিশালী)
+    data = {
+        'text': [
+            'Free prize money now', 'Hi, how are you?', 'Claim your $1000 prize', 
+            'Meeting scheduled at 10am', 'Win a gift card', 'Please call me later',
+            'Congratulations! Cash reward', 'Are you coming today?', 
+            'Urgent: Account locked click here', 'The project file is attached'
+        ],
+        'label': ['spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham']
+    }
+    df = pd.DataFrame(data)
+    cv = CountVectorizer()
+    X = cv.fit_transform(df['text'])
+    model = MultinomialNB()
+    model.fit(X, df['label'])
 
-# 6. Model Training
-cv = CountVectorizer()
-X = cv.fit_transform(df['text'])
-model = MultinomialNB()
-model.fit(X, df['label'])
-
-# 7. Analyze Message Section
-st.markdown("### 🔍 Analyze Message")
-user_input = st.text_area("", placeholder="Enter your message here...", height=150)
-
-col1, col2, col3 = st.columns([1,1,1])
-with col2:
-    if st.button("Run Security Scan"):
+    if st.button("Analyze Message"):
         if user_input:
             vect = cv.transform([user_input])
             prediction = model.predict(vect)
+            prob = model.predict_proba(vect) # আত্মবিশ্বাস যাচাই
             
-            st.markdown("---")
+            st.markdown("### 📊 Analysis Result")
             if prediction[0] == 'spam':
-                # Results in English and Bangla (as per your image)
-                st.error("🚨 RESULT: SPAM DETECTED")
-                st.error("🚨 ফলাফল: এটি একটি স্প্যাম (SPAM) মেসেজ!")
-                st.warning("Be careful, this message might be a security risk. সতর্ক থাকুন, এই মেসেজটি আপনার নিরাপত্তার জন্য ঝুঁকিপূর্ণ হতে পারে।")
+                st.error(f"⚠️ SPAM DETECTED!")
+                st.write(f"মডেলটি **{prob[0][1]*100:.2f}%** নিশ্চিত যে এটি একটি স্প্যাম মেসেজ।")
+                st.warning("পরামর্শ: এই ধরণের মেসেজের কোনো লিঙ্কে ক্লিক করবেন না এবং ব্যক্তিগত তথ্য দেবেন না।")
             else:
-                st.success("✅ RESULT: SAFE MESSAGE")
-                st.success("✅ ফলাফল: এটি একটি নিরাপদ (SAFE) মেসেজ।")
-                st.info("This message looks safe to use. এই মেসেজটি নিরাপদ মনে হচ্ছে।")
+                st.success(f"✅ SAFE (HAM)")
+                st.write(f"মডেলটি **{prob[0][0]*100:.2f}%** নিশ্চিত যে এটি নিরাপদ।")
+                st.info("এটি একটি সাধারণ যোগাযোগের মেসেজ বলে মনে হচ্ছে।")
         else:
-            st.warning("Please enter a message.")
+            st.warning("দয়া করে বিশ্লেষণ করার জন্য একটি মেসেজ ইনপুট দিন।")
 
-# 8. Footer (English only)
-st.markdown("<br><hr>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: #7f8c8d;'>Developed by Shakibul Hasan | Machine Learning Project</p>", unsafe_allow_html=True)
+with col2:
+    st.markdown("### 💡 কেন এটি ব্যবহার করবেন?")
+    st.write("- **রিয়েল-টাইম এনালাইসিস**")
+    st.write("- **গাণিতিক নির্ভুলতা**")
+    st.write("- **সহজ ইউজার ইন্টারফেস**")
+    
+    st.markdown("---")
+    st.write("### 🛠️ টেকনোলজি স্ট্যাক")
+    st.code("Python\nStreamlit\nScikit-learn\nNaive Bayes", language="text")
+
+# ৫. ফুটার
+st.markdown("---")
+st.markdown("<center>Developed by <b>Shakibul Hasan</b> | Powered by Machine Learning</center>", unsafe_allow_html=True)
