@@ -17,7 +17,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# ২. উন্নত কাস্টম সিএসএস (UI Fix)
+# ২. কাস্টম সিএসএস (UI Fix)
 st.markdown("""
     <style>
     .main { background-color: #f4f7f6; }
@@ -32,7 +32,6 @@ st.markdown("""
         border-left: 6px solid #1e3c72;
     }
     .footer { text-align: center; color: #666; padding: 30px; border-top: 1px solid #ddd; margin-top: 60px; }
-    .grid-box { background: white; padding: 20px; border-radius: 15px; border-top: 4px solid #1e3c72; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -53,20 +52,18 @@ def load_advanced_engine():
     X = cv.fit_transform(df['text'])
     model = MultinomialNB()
     model.fit(X, df['label'])
-    y_pred = model.predict(X)
-    acc = accuracy_score(df['label'], y_pred)
-    return cv, model, acc
+    return cv, model
 
-cv, model, model_acc = load_advanced_engine()
+cv, model = load_advanced_engine()
 
-# ৪. সাইডবার নেভিগেশন (NameError ফিক্স করার জন্য সঠিক ভেরিয়েবল নাম)
+# ৪. সাইডবার নেভিগেশন (Fixing NameError)
 with st.sidebar:
     st.title("🛡️ SecureHub AI")
     st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=100)
     st.markdown("### Developer: Shakibul Hasan")
     st.caption("CSE Student | Jamalpur, BD")
     st.markdown("---")
-    # এখানে 'menu' ভেরিয়েবলটি ডিফাইন করা হয়েছে যা NameError দূর করবে
+    # 'menu' ভেরিয়েবলটি এখানে ডিফাইন করা হয়েছে
     menu = st.radio("Applications", [
         "🏠 Dashboard", 
         "🔍 Spam Detector", 
@@ -76,7 +73,7 @@ with st.sidebar:
         "📂 API & Developer Portal"
     ])
     st.markdown("---")
-    st.success(f"System Accuracy: {model_acc*100:.1f}%")
+    st.info("System Status: Active")
 
 # ৫. ড্যাশবোর্ড
 if menu == "🏠 Dashboard":
@@ -86,12 +83,11 @@ if menu == "🏠 Dashboard":
     c1.metric("Scanned", "12.5k", "+18%")
     c2.metric("Blocked", "3,402", "+12%")
     c3.metric("Sites", "842", "+25%")
-    c4.metric("Uptime", "99.9%", "Stable")
+    c4.metric("Risk Level", "Low", "Stable")
     
     st.markdown("---")
-    st.subheader("Global Threat Activity (2026)")
-    chart_data = pd.DataFrame({'Attacks': [20, 50, 30, 90, 70, 40, 100]})
-    st.line_chart(chart_data)
+    st.subheader("Weekly Threat Analytics")
+    st.area_chart(pd.DataFrame({'Threats': [10, 25, 15, 45, 30, 10, 5]}))
 
 # ৬. স্প্যাম ডিটেক্টর
 elif menu == "🔍 Spam Detector":
@@ -106,55 +102,57 @@ elif menu == "🔍 Spam Detector":
             else: st.success("✅ CLEAN CONTENT DETECTED")
             st.markdown("</div>", unsafe_allow_html=True)
 
-# ৭. ইউআরএল স্ক্যানার
+# ৭. ইউআরএল স্ক্যানার (Score Logic Explained)
 elif menu == "🔗 URL Scanner":
     st.title("🔗 Phishing Link Intelligence")
     st.image("https://img.freepik.com/free-vector/phishing-concept-flat-design_23-2148529367.jpg", width=600)
-    url = st.text_input("Enter URL Path:")
+    url = st.text_input("Enter URL Path:", placeholder="https://www.google.com")
+    
     if st.button("Scan Link Safety ⚙️"):
-        score = 65 if "verify" in url or "login" in url else 10
-        st.markdown(f"<div class='status-card'>Link Scanned. Risk Score: {score}/100</div>", unsafe_allow_html=True)
+        if url:
+            # স্কোরিং লজিক
+            score = 10 # ডিফল্ট সেফটি স্কোর
+            if "verify" in url or "login" in url: score += 55
+            if len(url) > 50: score += 20
+            
+            st.markdown(f"<div class='status-card'>Link Scanned. Risk Score: {score}/100</div>", unsafe_allow_html=True)
+            if score > 50: st.error("🚨 This link looks suspicious!")
+            else: st.success("✅ This link appears to be safe.")
 
 # ৮. বাল্ক এনালাইজার
 elif menu == "📁 Bulk Analyzer":
     st.title("📁 Batch Processing")
-    file = st.file_uploader("Upload Dataset", type=["csv"])
+    file = st.file_uploader("Upload CSV", type=["csv"])
     if file:
-        st.success("File uploaded! Ready for bulk scanning.")
-        st.button("Start Processing")
+        st.success("Dataset Loaded!")
+        st.button("Start Bulk Processing")
 
-# ৯. সাইবার সিকিউরিটি ইনসাইটস (নতুন বড় কন্টেন্ট)
+# ৯. সাইবার সিকিউরিটি ইনসাইটস (নতুন বড় কন্টেন্ট ও ছবি)
 elif menu == "💡 Cybersecurity Insights":
-    st.title("💡 Cybersecurity Intelligence Center")
+    st.title("💡 Security Intelligence Center")
     st.image("https://img.freepik.com/free-photo/standard-quality-control-concept-m_23-2150041848.jpg", use_container_width=True)
     
-    tab1, tab2, tab3 = st.tabs(["🛡️ User Safety", "🚨 Global Threats", "🛠️ Architecture"])
-    with tab1:
-        st.markdown("### How to Identify Phishing Emails")
-        st.write("১. **Urgent Language:** যদি মেসেজে খুব দ্রুত কিছু করার তাগাদা দেয়।")
-        st.write("২. **Mismatched Links:** লিঙ্কের ওপর মাউস রাখলে যদি অন্য অ্যাড্রেস দেখায়।")
-        st.write("৩. **Poor Grammar:** বড় কোম্পানি সাধারণত ভুল বানানে মেসেজ পাঠায় না।")
-    with tab2:
-        st.markdown("### Threat Landscape 2026")
-        fig = px.pie(names=['Phishing', 'Malware', 'Ransomware', 'Others'], values=[45, 25, 20, 10], hole=0.3)
+    t1, t2 = st.tabs(["🛡️ Safety Tips", "📊 Threat Stats"])
+    with t1:
+        st.subheader("How to Stay Safe Online")
+        st.write("- **2FA:** সবসময় টু-ফ্যাক্টর অথেন্টিকেশন চালু রাখুন।")
+        st.write("- **Links:** অপরিচিত নম্বর থেকে আসা লিঙ্কে ক্লিক করবেন না।")
+        st.write("- **Software:** আপনার ফোনের সিকিউরিটি প্যাচ আপডেট রাখুন।")
+    with t2:
+        st.subheader("Threat Distribution 2026")
+        fig = px.pie(names=['Phishing', 'Malware', 'Others'], values=[60, 25, 15], hole=0.4)
         st.plotly_chart(fig, use_container_width=True)
-    with tab3:
-        st.markdown("### System Architecture")
-        st.code("Model: Multinomial Naive Bayes\nVectorization: Bag of Words\nPlatform: Streamlit Cloud", language="text")
 
 # ১০. এপিআই পোর্টাল
 elif menu == "📂 API & Developer Portal":
-    st.title("📂 Developer Integration Hub")
+    st.title("📂 Developer Hub")
     st.image("https://img.freepik.com/free-vector/api-concept-illustration_114360-9397.jpg", width=500)
-    st.markdown("### Integration Guide")
-    st.write("আপনি আপনার নিজের অ্যাপে এই ডিটেক্টর ব্যবহার করতে নিচের কোডটি ব্যবহার করতে পারেন:")
+    st.markdown("### Integration Example")
     st.code("""
 import requests
-
-def check_spam(text):
-    api_url = "https://api.spamguard.ai/v1/scan"
-    response = requests.post(api_url, json={"text": text})
-    return response.json()
+# Your API Integration code here
+response = requests.post("https://api.spamguard.ai/scan", json={"text": "Win $1000"})
+print(response.json())
     """, language="python")
 
 # ১১. ফুটার
