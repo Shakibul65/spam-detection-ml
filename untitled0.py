@@ -2,196 +2,127 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import plotly.graph_objects as go
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.model_selection import train_test_split
 from datetime import datetime
 import time
 
-# ==========================================
-# ১. পেজ কনফিগারেশন ও থিম (Responsive Layout)
-# ==========================================
+# ১. পেজ কনফিগারেশন
 st.set_page_config(
-    page_title="SpamGuard AI | Advanced Security Hub",
+    page_title="SpamGuard AI | Advanced Hub",
     page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
-# কাস্টম সিএসএস (UI সৌন্দর্য বাড়ানোর জন্য)
+# ২. কাস্টম ডিজাইন (CSS)
 st.markdown("""
     <style>
-    .main { background-color: #f0f2f5; }
-    .stApp { max-width: 100%; }
-    .css-1d391kg { background-color: #1a1c24; }
-    .stat-card {
-        padding: 20px;
-        border-radius: 15px;
-        background: white;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
-    }
-    .footer {
-        position: fixed;
-        left: 0;
-        bottom: 0;
-        width: 100%;
-        background-color: white;
-        color: #666;
-        text-align: center;
-        padding: 10px;
-        border-top: 1px solid #ddd;
-        z-index: 100;
-    }
+    .main { background-color: #f4f7f6; }
+    .stButton>button { width: 100%; border-radius: 5px; height: 3em; background-color: #007bff; color: white; }
+    .footer { position: fixed; left: 0; bottom: 0; width: 100%; text-align: center; padding: 10px; background: white; border-top: 1px solid #ddd; }
     </style>
     """, unsafe_allow_html=True)
 
-# ==========================================
-# ২. ডামি লার্জ ডেটাসেট ও মডেল ট্রেনিং
-# ==========================================
+# ৩. এআই ইঞ্জিন (ডেটা এবং মডেল)
 @st.cache_resource
-def initialize_ai_engine():
-    # এখানে আমরা ডাটা বাড়াচ্ছি যাতে মডেলটি আরও স্মার্ট হয়
-    raw_data = {
+def load_ai_model():
+    data = {
         'text': [
-            'Get 100% free money now', 'Hi, how are you today?', 'Claim your $1000 lottery prize', 
-            'Meeting scheduled for tomorrow at 10am', 'Win a free iPhone 15 gift card', 
-            'Please call me back when you are free', 'Congratulations! You won a cash reward', 
-            'Can we discuss the project updates?', 'Urgent: Your bank account is locked, click here', 
-            'The final project report is attached', 'Double your crypto investment in 24 hours',
-            'Let\'s go for lunch today', 'Your OTP for transaction is 567890',
-            'Apply for a high paying job from home', 'Hey, did you see the email I sent?',
-            'Verify your identity immediately to avoid suspension', 'Dinner at 8 PM tonight?',
-            'Cheap pharmacy deals available online', 'Thanks for the quick response',
-            'Get a discount on your next flight booking', 'Please review the attached documents',
-            'Your parcel is waiting at the post office', 'Are you available for a quick call?',
-            'Invest now to earn millions in a week', 'Reminder: Subscription expires in 2 days'
+            'Free prize money now', 'Hi, how are you?', 'Claim your $1000 prize', 
+            'Meeting scheduled at 10am', 'Win a free gift card', 'Please call me later',
+            'Congratulations! Cash reward', 'Are you coming today?', 
+            'Urgent: Account locked click here', 'The project file is attached',
+            'Get unlimited free data', 'Can we discuss the budget?',
+            'Earn money from home easily', 'Thanks for the update',
+            'Your OTP is 1234', 'Double your investment in 2 days',
+            'Hey, did you see the email?', 'Special discount just for you',
+            'I will be there in 5 mins', 'You won a lottery tickets'
         ],
-        'label': [
-            'spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham',
-            'spam', 'ham', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam',
-            'ham', 'spam', 'ham', 'spam', 'ham'
-        ]
+        'label': ['spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam']
     }
-    df = pd.DataFrame(raw_data)
+    df = pd.DataFrame(data)
     cv = CountVectorizer()
     X = cv.fit_transform(df['text'])
     model = MultinomialNB()
     model.fit(X, df['label'])
     return cv, model, df
 
-cv, model, base_df = initialize_ai_engine()
+cv, model, base_df = load_ai_model()
 
-# ==========================================
-# ৩. সাইডবার নেভিগেশন (Student Profile)
-# ==========================================
+# ৪. সাইডবার নেভিগেশন
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=120)
-    st.title("User Profile")
-    st.write("---")
-    st.markdown("### 👨‍💻 Shakibul Hasan")
-    st.caption("CSE Student | Machine Learning Enthusiast")
-    st.info("📍 Jamalpur, Bangladesh")
-    
+    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=100)
+    st.title("Admin Panel")
+    st.markdown("**User:** Shakibul Hasan")
+    st.caption("CSE Student | Jamalpur, BD")
     st.markdown("---")
-    st.subheader("🛠️ Navigation")
-    choice = st.selectbox("Go to:", [
-        "🏠 Overview Dashboard", 
-        "🔍 Spam Detection Tool", 
-        "📈 Analytics & Insights", 
-        "🛡️ Security Best Practices", 
-        "📂 Developer API",
-        "👨‍💻 About Developer"
-    ])
-    
-    st.markdown("---")
-    st.write("⏱️ **System Time:**", datetime.now().strftime("%H:%M:%S"))
-    st.success("✅ System Integrity: Stable")
+    choice = st.radio("Navigation", ["📊 Dashboard", "🔍 Detection Tool", "💡 Security Tips", "👨‍💻 Developer"])
 
-# ==========================================
-# ৪. পেজ ১: ওভারভিউ ড্যাশবোর্ড
-# ==========================================
-if choice == "🏠 Overview Dashboard":
-    st.title("📊 Security Intelligence Overview")
-    st.write("Welcome back, Shakibul! Here's what's happening with your SpamGuard AI system.")
+# ৫. ড্যাশবোর্ড পেজ
+if choice == "📊 Dashboard":
+    st.title("📈 Security Analytics Dashboard")
     
-    # ইনডেক্স কার্ডস
-    c1, c2, c3, c4 = st.columns(4)
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Total Scanned", "1,540", "+12%")
+    col2.metric("Spam Blocked", "420", "+5%")
+    col3.metric("Accuracy", "98.5%", "0.2%")
+    col4.metric("Risk Level", "Low", "Stable")
+    
+    st.markdown("---")
+    
+    c1, c2 = st.columns(2)
     with c1:
-        st.metric("Total Scanned", "5,842", "+15%")
-    with c2:
-        st.metric("Spam Identified", "1,204", "+8%")
-    with c3:
-        st.metric("Ham (Safe)", "4,638", "-2%")
-    with c4:
-        st.metric("Uptime", "99.9%", "Stable")
-
-    st.markdown("---")
-    
-    # ডামি গ্রাফ
-    col_left, col_right = st.columns(2)
-    with col_left:
-        st.subheader("📈 Threat Activity (Last 7 Days)")
-        chart_data = pd.DataFrame({
-            'Day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-            'Spam': [120, 150, 110, 180, 200, 90, 70],
-            'Ham': [400, 420, 380, 450, 480, 550, 600]
-        })
-        fig = px.area(chart_data, x='Day', y=['Spam', 'Ham'], color_discrete_sequence=['red', 'green'])
+        st.subheader("Weekly Spam Activity")
+        chart_data = pd.DataFrame({'Day': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'], 'Hits': [30, 45, 25, 60, 55, 20, 15]})
+        fig = px.bar(chart_data, x='Day', y='Hits', color='Hits')
         st.plotly_chart(fig, use_container_width=True)
-
-    with col_right:
-        st.subheader("🛡️ Distribution by Category")
-        labels = ['Phishing', 'Promotional', 'Legit', 'Social']
-        values = [450, 600, 4000, 792]
-        fig_pie = px.pie(names=labels, values=values, hole=0.4, color_discrete_sequence=px.colors.sequential.RdBu)
+    with c2:
+        st.subheader("Data Distribution")
+        fig_pie = px.pie(base_df, names='label', hole=0.4, color_discrete_sequence=['#28a745', '#dc3545'])
         st.plotly_chart(fig_pie, use_container_width=True)
 
-# ==========================================
-# ৫. পেজ ২: স্প্যাম ডিটেকশন টুল
-# ==========================================
-elif choice == "🔍 Spam Detection Tool":
-    st.title("🔍 Advanced AI Content Scanner")
-    st.write("Paste your message below for deep analysis using our Naive Bayes AI engine.")
-
-    input_text = st.text_area("Input Message:", height=250, placeholder="Type or paste email/SMS content here...")
+# ৬. ডিটেকশন টুল পেজ
+elif choice == "🔍 Detection Tool":
+    st.title("🔍 Smart Content Scanner")
+    message = st.text_area("মেসেজটি এখানে পেস্ট করুন:", placeholder="Type here...", height=200)
     
-    col_btn1, col_btn2 = st.columns([1, 4])
-    with col_btn1:
-        analyze = st.button("Run Scan 🚀")
-    
-    if analyze:
-        if input_text:
-            with st.spinner("Analyzing message patterns and metadata..."):
-                time.sleep(1.5) # রিয়েলস্টিক ফিল দেওয়ার জন্য
-                vect = cv.transform([input_text])
+    if st.button("Analyze Now 🚀"):
+        if message:
+            with st.spinner('AI is analyzing...'):
+                time.sleep(1)
+                vect = cv.transform([message])
                 prediction = model.predict(vect)[0]
-                probability = model.predict_proba(vect)[0]
+                prob = model.predict_proba(vect)[0]
                 
-                # ফলাফল উইজেট
                 st.markdown("---")
-                res_col1, res_col2 = st.columns(2)
+                if prediction == 'spam':
+                    st.error(f"🚨 SPAM DETECTED! (Confidence: {prob[1]*100:.1f}%)")
+                else:
+                    st.success(f"✅ SAFE MESSAGE (Confidence: {prob[0]*100:.1f}%)")
                 
-                with res_col1:
-                    if prediction == 'spam':
-                        st.error("🚨 RESULT: POSITIVE SPAM")
-                        st.subheader(f"Confidence: {probability[1]*100:.2f}%")
-                    else:
-                        st.success("✅ RESULT: NEGATIVE (SAFE)")
-                        st.subheader(f"Confidence: {probability[0]*100:.2f}%")
-                
-                with res_col2:
-                    st.write("**Analysis Details:**")
-                    st.info(f"- Word Count: {len(input_text.split())}")
-                    st.info(f"- Character Count: {len(input_text)}")
-                    st.info("- Algorithm: Multinomial Naive Bayes")
+                st.info(f"Stats: {len(message.split())} words, {len(message)} characters.")
         else:
-            st.warning("⚠️ Please enter some text to scan.")
+            st.warning("Please enter text.")
 
-# ==========================================
-# ৬. পেজ ৩: অ্যানালিটিক্স
-# ==========================================
-elif choice == "📈 Analytics & Insights":
-    st.title("📊 Data Analytics")
-    st.write("Detailed breakdown of model
+# ৭. টিপস পেজ
+elif choice == "💡 Security Tips":
+    st.title("💡 Cyber Security Best Practices")
+    st.markdown("""
+    - **Check the Sender:** অচেনা ইমেইল অ্যাড্রেস থেকে সাবধান থাকুন।
+    - **Urgency:** কোনো মেসেজ যদি খুব তাড়াহুড়ো করতে বলে, তবে সেটি স্প্যাম হওয়ার সম্ভাবনা বেশি।
+    - **Links:** লিঙ্কে ক্লিক করার আগে মাউস রেখে আসল ইউআরএল দেখে নিন।
+    """)
+
+# ৮. ডেভেলপার পেজ
+else:
+    st.title("👨‍💻 About Developer")
+    st.markdown("""
+    **Name:** Shakibul Hasan  
+    **Role:** CSE Student & Freelancer  
+    **Location:** Jamalpur, Bangladesh  
+    
+    This project is built using Python, Streamlit, and Scikit-learn to demonstrate Machine Learning capabilities in Cyber Security.
+    """)
+
+# ৯. ফুটার
+st.markdown(f'<div class="footer">Developed by Shakibul Hasan | CSE Student | {datetime.now().year}</div>', unsafe_allow_html=True)
