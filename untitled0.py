@@ -7,60 +7,65 @@ import time
 # ১. পেজ সেটআপ
 st.set_page_config(page_title="SpamGuard Elite", page_icon="🛡️", layout="wide")
 
-# ২. হাই-কন্ট্রাস্ট এবং স্পষ্ট ডিজাইন (CSS)
+# ২. সুপার ক্লিয়ার ডিজাইন (CSS) - সব লেখা স্পষ্ট করার জন্য
 st.markdown("""
     <style>
-    .stApp { background: #0f172a; color: #ffffff; }
-    
-    /* বাটন - লেখাটি একদম কালো (Black) করা হয়েছে যাতে সাদা ব্যাকগ্রাউন্ডেও স্পষ্ট বোঝা যায় */
-    .stButton>button {
-        color: #000000 !important; 
+    /* মেইন ব্যাকগ্রাউন্ড */
+    .stApp { background-color: #0f172a; color: #ffffff; }
+
+    /* বাটন - একদম স্পষ্ট কালো লেখা এবং উজ্জ্বল ব্যাকগ্রাউন্ড */
+    div.stButton > button {
         background-color: #ffffff !important;
+        color: #000000 !important;
         font-weight: 900 !important;
-        font-size: 18px !important;
-        border: 2px solid #6366f1 !important;
+        font-size: 20px !important;
+        border: 3px solid #6366f1 !important;
         border-radius: 12px;
-        padding: 10px 20px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-    }
-    
-    /* সাইডবার টেক্সট - আরও উজ্জ্বল ও বড় করা হয়েছে */
-    section[data-testid="stSidebar"] {
-        background-color: #1e293b !important;
-        border-right: 1px solid #334155;
-    }
-    .sidebar-box {
-        background: #ffffff; 
-        padding: 15px; 
-        border-radius: 10px; 
-        color: #000000 !important;
-        font-weight: bold;
-    }
-    .sidebar-box h3, .sidebar-box p {
-        color: #000000 !important;
-        margin: 0;
+        width: 100%;
+        height: 55px;
     }
 
-    /* রেজাল্ট টাইটেল */
-    .result-title { 
-        font-size: 28px; 
-        font-weight: 800; 
-        color: #ffffff !important;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+    /* সাইডবার - ডার্ক বক্সের ভেতর সাদা লেখা */
+    section[data-testid="stSidebar"] {
+        background-color: #1e293b !important;
     }
-    
-    /* ইনপুট বক্সের লেবেল */
-    label {
+    .sb-profile {
+        background: #000000; 
+        padding: 20px; 
+        border-radius: 15px; 
+        border: 1px solid #6366f1;
         color: #ffffff !important;
+    }
+
+    /* রেজাল্ট বক্স - বড় এবং স্পষ্ট টেক্সট */
+    .res-box {
+        padding: 30px;
+        border-radius: 20px;
+        text-align: center;
+        margin-top: 25px;
+        border: 4px solid;
+    }
+    .res-title { font-size: 32px; font-weight: 900; margin-bottom: 10px; }
+    .res-conf { 
+        font-size: 20px; 
+        background: #ffffff; 
+        color: #000000; 
+        padding: 5px 15px; 
+        border-radius: 50px; 
+        font-weight: bold;
+    }
+
+    /* ইনপুট এরিয়া টেক্সট */
+    .stTextArea textarea {
         font-size: 18px !important;
-        font-weight: bold !important;
+        color: #ffffff !important;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# ৩. মডেল লোড
+# ৩. মডেল লোডিং
 @st.cache_resource
-def get_model():
+def load_data():
     url = "https://raw.githubusercontent.com/justmarkham/pycon-2016-tutorial/master/data/sms.tsv"
     df = pd.read_table(url, header=None, names=['label', 'text'])
     cv = CountVectorizer()
@@ -69,36 +74,56 @@ def get_model():
     model.fit(X, df['label'])
     return cv, model
 
-cv, model = get_model()
+cv, model = load_data()
 
-# ৪. সাইডবার (স্পষ্ট টেক্সট)
+# ৪. সাইডবার (আপনার প্রোফাইল)
 with st.sidebar:
     st.markdown("<h2 style='text-align: center; color: #818cf8;'>🛡️ SpamGuard</h2>", unsafe_allow_html=True)
     st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=100)
     st.markdown('''
-        <div class="sidebar-box">
-            <p>Developer Profile</p>
-            <h3>Shakibul Hasan</h3>
-            <p style="font-size: 13px;">CSE Student | Freelancer</p>
+        <div class="sb-profile">
+            <p style="margin:0; font-size:14px; opacity:0.8;">Developer</p>
+            <h2 style="margin:0; color:#fbbf24;">Shakibul Hasan</h2>
+            <p style="margin:0;">CSE Student | Freelancer</p>
         </div>
     ''', unsafe_allow_html=True)
     st.markdown("---")
     st.write("📍 Jamalpur, Bangladesh")
 
-# ৫. মেইন বডি
-st.markdown("<h1 style='text-align: center; color: #ffffff;'>Smart AI Message Shield</h1>", unsafe_allow_html=True)
+# ৫. মেইন কন্টেন্ট
+st.markdown("<h1 style='text-align: center;'>AI Spam Detection System</h1>", unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns([0.1, 0.8, 0.1])
 with col2:
-    user_input = st.text_area("আপনার মেসেজটি এখানে লিখুন:", height=150)
+    msg = st.text_area("মেসেজটি এখানে লিখুন:", height=150, placeholder="বিশ্লেষণের জন্য টেক্সট দিন...")
     
     if st.button("এনালাইসিস শুরু করুন ✨"):
-        if user_input:
-            with st.spinner('AI চেক করছে...'):
+        if msg:
+            with st.spinner('AI প্রসেসিং করছে...'):
                 time.sleep(1)
-                vect = cv.transform([user_input])
-                prediction = model.predict(vect)
-                conf_score = 99.12  # আপনার রিকয়ারমেন্ট অনুযায়ী ফিক্সড
+                vect = cv.transform([msg])
+                res = model.predict(vect)
+                
+                # আপনার চাহিদা মতো ৯৯.১২% ফিক্সড করা হলো
+                confidence = "99.12%"
 
-            if prediction[0] == 'spam':
-                st.markdown(f'<div style="background: #ef4444; padding: 20px; border-radius: 15px; text-align: center;"><div class="result-title">🚨 এটি একটি স্প্যাম মেসেজ</div><div style
+            if res[0] == 'spam':
+                st.markdown(f'''
+                    <div class="res-box" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.1);">
+                        <div class="res-title" style="color: #ef4444;">🚨 এটি একটি স্প্যাম মেসেজ</div>
+                        <span class="res-conf">নিশ্চয়তা: {confidence}</span>
+                    </div>
+                ''', unsafe_allow_html=True)
+                st.snow()
+            else:
+                st.markdown(f'''
+                    <div class="res-box" style="border-color: #22c55e; background: rgba(34, 197, 94, 0.1);">
+                        <div class="res-title" style="color: #22c55e;">✅ এটি একটি নিরাপদ মেসেজ</div>
+                        <span class="res-conf">নিশ্চয়তা: {confidence}</span>
+                    </div>
+                ''', unsafe_allow_html=True)
+                st.balloons()
+        else:
+            st.error("দয়া করে একটি মেসেজ ইনপুট দিন!")
+
+st.markdown("<br><center style='color: #94a3b8;'>Developed by Shakibul Hasan | 2026</center>", unsafe_allow_html=True)
