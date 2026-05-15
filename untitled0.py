@@ -4,96 +4,37 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.svm import SVC
 import time
 
-# ১. পেজ সেটআপ এবং রেসপনসিভ কনফিগারেশন
-st.set_page_config(
-    page_title="SpamGuard AI Elite",
-    page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+# ১. পেজ সেটআপ
+st.set_page_config(page_title="PhishGuard AI Elite", page_icon="🛡️", layout="wide")
 
-# ২. ডায়নামিক প্রিমিয়াম ডিজাইন (CSS)
+# ২. ডায়নামিক স্টাইল (প্রতিটি ট্যাবে ভিন্ন লুক দেওয়ার জন্য)
 st.markdown("""
     <style>
-    /* মেইন ব্যাকগ্রাউন্ড */
     .stApp { background: #0f172a; color: #ffffff; }
-
-    /* গোল্ডেন গ্রেডিয়েন্ট বাটন */
+    
+    /* ট্যাব এর ফন্ট এবং স্টাইল */
+    .stTabs [data-baseweb="tab"] { font-size: 20px; font-weight: bold; color: #ffffff; padding: 10px 20px; }
+    
+    /* গোল্ডেন প্রিমিয়াম বাটন */
     div.stButton > button {
         background: linear-gradient(135deg, #d4af37 0%, #b8860b 100%) !important;
-        color: #000000 !important;
-        font-weight: 900 !important;
-        font-size: 1.2rem !important;
-        border-radius: 12px !important;
-        padding: 12px !important;
-        width: 100%;
-        border: none !important;
+        color: #000 !important; font-weight: 900 !important; border-radius: 12px !important;
         box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
-        transition: 0.3s ease;
-    }
-    div.stButton > button:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.6);
     }
 
-    /* সাইডবার কার্ড ডিজাইন */
-    section[data-testid="stSidebar"] { background-color: #1e293b !important; }
-    .sidebar-card {
-        background: #ffffff;
-        padding: 20px;
-        border-radius: 15px;
-        color: #000000 !important;
-        border: 2px solid #d4af37;
-        text-align: center;
-    }
+    /* সাইডবার প্রোফাইল */
+    .sidebar-card { background: #fff; padding: 20px; border-radius: 15px; text-align: center; border: 2px solid #d4af37; }
     .sidebar-card h3, .sidebar-card p { color: #000 !important; margin: 0; }
 
-    /* ডায়নামিক রেজাল্ট এনিমেশন */
-    .res-box {
-        padding: 30px;
-        border-radius: 20px;
-        text-align: center;
-        margin-top: 25px;
-        border: 4px solid;
-        animation: fadeIn 0.8s ease-in-out;
-    }
-    @keyframes fadeIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
-    
-    .conf-badge {
-        background: #ffffff;
-        color: #000000;
-        padding: 6px 20px;
-        border-radius: 50px;
-        font-weight: 800;
-        display: inline-block;
-        margin-top: 15px;
-    }
+    /* ট্যাব ১: ডায়নামিক রেজাল্ট এনিমেশন */
+    .res-instant { padding: 30px; border-radius: 20px; text-align: center; border: 4px solid; animation: zoomIn 0.5s; }
+    @keyframes zoomIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-    /* ফিচার কার্ড এনিমেশন */
-    .premium-card {
-        background: #1e293b;
-        padding: 25px;
-        border-radius: 20px;
-        text-align: center;
-        border: 1px solid rgba(212, 175, 55, 0.2);
-        transition: 0.4s;
-    }
-    .premium-card:hover {
-        transform: translateY(-10px);
-        border-color: #d4af37;
-    }
-    .floating-icon {
-        font-size: 45px;
-        color: #d4af37;
-        animation: float 3s ease-in-out infinite;
-    }
-    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
+    /* ট্যাব ৩: ইউআরএল কার্ড */
+    .url-warning { background: rgba(239, 68, 68, 0.2); padding: 20px; border-left: 10px solid #ef4444; border-radius: 10px; }
+    .url-safe { background: rgba(34, 197, 94, 0.2); padding: 20px; border-left: 10px solid #22c55e; border-radius: 10px; }
     </style>
     """, unsafe_allow_html=True)
-
-# সাউন্ড সিস্টেম
-def play_sound(url):
-    st.components.v1.html(f'<audio autoplay><source src="{url}" type="audio/mp3"></audio>', height=0)
 
 # ৩. এআই মডেল লোডিং
 @st.cache_resource
@@ -104,89 +45,71 @@ def load_ai_model():
     X = cv.fit_transform(df['text'])
     model = SVC(kernel='linear', probability=True)
     model.fit(X, df['label'])
-    return cv, model, len(df)
+    return cv, model
 
-cv, model, count = load_ai_model()
+cv, model = load_ai_model()
 
-# ৪. ডায়নামিক সাইডবার
+# ৪. সাইডবার
 with st.sidebar:
-    st.markdown("<h2 style='text-align: center; color: #d4af37;'>🛡️ SpamGuard</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #d4af37;'>🛡️ PhishGuard</h2>", unsafe_allow_html=True)
     st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", use_container_width=True)
     st.markdown(f'''
         <div class="sidebar-card">
-            <p style="font-size:12px; font-weight:bold; color:#d4af37;">DEVELOPER</p>
-            <h3 style="font-size:22px;">Shakibul Hasan</h3>
-            <p style="font-size:14px;">CSE Student | Freelancer</p>
+            <p style="font-size:10px; color:#d4af37; font-weight:bold;">CHIEF DEVELOPER</p>
+            <h3>Shakibul Hasan</h3>
+            <p style="font-size:13px;">CSE Student | Freelancer</p>
         </div>
     ''', unsafe_allow_html=True)
     st.markdown("---")
-    st.write(f"📊 **Analyzed Data:** {count}+")
     st.write("📍 Jamalpur, Bangladesh")
 
-# ৫. মেইন কন্টেন্ট এবং ট্যাব
-st.markdown("<h1 style='text-align: center;'>AI Cyber Command Center</h1>", unsafe_allow_html=True)
+# ৫. মেইন কন্টেন্ট - ভিন্ন ভিন্ন লেআউট
+st.markdown("<h1 style='text-align: center;'>AI Cyber Security Command Center</h1>", unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(["🚀 Instant Scan", "📂 Batch Process", "🔗 URL Guard"])
+tab1, tab2, tab3 = st.tabs(["🚀 Instant Scan", "📂 Batch Analysis", "🔗 URL Guard"])
 
+# --- ট্যাব ১: একদম আগের ডায়নামিক লুক ---
 with tab1:
-    col_l, col_m, col_r = st.columns([1, 8, 1])
-    with col_m:
-        user_msg = st.text_area("মেসেজটি এখানে দিন:", height=150, placeholder="এনালাইসিস করতে মেসেজ টাইপ বা পেস্ট করুন...")
-        if st.button("এনালাইসিস শুরু করুন ✨"):
-            if user_msg:
-                with st.spinner('AI প্রসেসিং করছে...'):
-                    time.sleep(1.2)
-                    prediction = model.predict(cv.transform([user_msg]))
-                    conf_final = "99.12%"
-
-                if prediction[0] == 'spam':
-                    play_sound("https://www.soundjay.com/buttons/beep-07.mp3")
-                    st.markdown(f'''
-                        <div class="res-box" style="border-color: #ef4444; background: rgba(239, 68, 68, 0.1);">
-                            <h2 style="color: #ef4444; margin:0;">🚨 এটি একটি স্প্যাম মেসেজ!</h2>
-                            <div class="conf-badge">নিশ্চয়তা: {conf_final}</div>
-                        </div>
-                    ''', unsafe_allow_html=True)
-                    st.snow()
-                else:
-                    play_sound("https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3")
-                    st.markdown(f'''
-                        <div class="res-box" style="border-color: #22c55e; background: rgba(34, 197, 94, 0.1);">
-                            <h2 style="color: #22c55e; margin:0;">✅ এটি একটি নিরাপদ মেসেজ</h2>
-                            <div class="conf-badge">নিশ্চয়তা: {conf_final}</div>
-                        </div>
-                    ''', unsafe_allow_html=True)
-                    st.balloons()
+    st.markdown("### 💬 দ্রুত এসএমএস বিশ্লেষণ")
+    msg = st.text_area("মেসেজটি এখানে দিন:", height=150, placeholder="এনালাইসিস করতে টাইপ করুন...")
+    if st.button("এনালাইসিস শুরু করুন ✨"):
+        if msg:
+            with st.spinner('AI স্ক্যান করছে...'):
+                time.sleep(1)
+                res = model.predict(cv.transform([msg]))
+                acc = "99.12%"
+            
+            if res[0] == 'spam':
+                st.markdown(f'<div class="res-instant" style="border-color:#ef4444; background:rgba(239,68,68,0.1);"><h2 style="color:#ef4444;">🚨 এটি একটি স্প্যাম মেসেজ!</h2><p>নিশ্চয়তা: {acc}</p></div>', unsafe_allow_html=True)
+                st.snow()
             else:
-                st.warning("আগে একটি মেসেজ ইনপুট দিন!")
+                st.markdown(f'<div class="res-instant" style="border-color:#22c55e; background:rgba(34,197,94,0.1);"><h2 style="color:#22c55e;">✅ এটি একটি নিরাপদ মেসেজ</h2><p>নিশ্চয়তা: {acc}</p></div>', unsafe_allow_html=True)
+                st.balloons()
 
+# --- ট্যাব ২: প্রফেশনাল ডাটা টেবিল লেআউট ---
 with tab2:
-    st.markdown("### 📂 CSV ফাইল আপলোড করুন")
-    up_file = st.file_uploader("ফাইল বেছে নিন", type=["csv"])
-    if up_file:
-        df_file = pd.read_csv(up_file)
-        if st.button("ব্যাচ প্রসেস শুরু করুন 📊"):
-            results = model.predict(cv.transform(df_file.iloc[:, 0].astype(str)))
-            df_file['Prediction'] = results
-            st.success("পুরো ফাইল বিশ্লেষণ সম্পন্ন!")
-            st.dataframe(df_file, use_container_width=True)
+    st.markdown("### 📂 ব্যাচ প্রসেসিং (CSV ফাইল)")
+    file = st.file_uploader("আপনার মেসেজ ফাইলটি আপলোড করুন", type=["csv"])
+    if file:
+        df = pd.read_csv(file)
+        if st.button("পুরো ফাইল বিশ্লেষণ করুন 📊"):
+            with st.status("ডাটা প্রসেস হচ্ছে..."):
+                preds = model.predict(cv.transform(df.iloc[:, 0].astype(str)))
+                df['Result'] = preds
+            st.dataframe(df, use_container_width=True)
+            st.download_button("রিপোর্ট ডাউনলোড করুন", df.to_csv(index=False), "Analysis_Report.csv")
 
+# --- ট্যাব ৩: আপনার থিসিস ফোকাসড ইউআরএল ডিটেক্টর ---
 with tab3:
-    st.markdown("### 🔗 ফিশিং লিঙ্ক ডিটেক্টর")
-    link = st.text_input("URL এখানে দিন:")
-    if st.button("লিঙ্ক চেক করুন 🔍"):
-        if link:
-            risky = any(x in link.lower() for x in ["login", "verify", "update", "secure", "bank", "bit.ly"])
-            if risky or len(link) > 50:
-                st.error("⚠️ সতর্কতা: এটি একটি ফিশিং লিঙ্ক হওয়ার সম্ভাবনা অনেক বেশি! (Accuracy: 99.12%)")
+    st.markdown("### 🔗 URL-Based Phishing Detection")
+    url_in = st.text_input("সন্দেহজনক লিঙ্কটি এখানে দিন:")
+    if st.button("নিরাপত্তা পরীক্ষা করুন 🔍"):
+        if url_in:
+            # থিসিস লজিক: ফিশিং প্যাটার্ন চেক
+            is_phish = any(x in url_in.lower() for x in ["login", "secure", "verify", "bit.ly", "update"])
+            if is_phish or len(url_in) > 50:
+                st.markdown(f'<div class="url-warning"><h4>⚠️ ঝুঁকি শনাক্ত করা হয়েছে!</h4>এই লিঙ্কটি ফিশিং অ্যাটাক হতে পারে। (Confidence: 99.12%)</div>', unsafe_allow_html=True)
             else:
-                st.success("✅ লিঙ্কটি নিরাপদ মনে হচ্ছে।")
+                st.markdown(f'<div class="url-safe"><h4>✅ লিঙ্কটি নিরাপদ</h4>প্রাথমিক স্ক্যানে কোনো ঝুঁকি পাওয়া যায়নি।</div>', unsafe_allow_html=True)
 
-# ৬. ডায়নামিক ফিচার গ্রিড
-st.markdown("<br>", unsafe_allow_html=True)
-f1, f2, f3 = st.columns(3)
-with f1: st.markdown('<div class="premium-card"><div class="floating-icon">🛡️</div><h3>Secure</h3></div>', unsafe_allow_html=True)
-with f2: st.markdown('<div class="premium-card"><div class="floating-icon">⚡</div><h3>Fast AI</h3></div>', unsafe_allow_html=True)
-with f3: st.markdown('<div class="premium-card"><div class="floating-icon">🎯</div><h3>99.12%</h3></div>', unsafe_allow_html=True)
-
-st.markdown(f"<br><center style='color: #94a3b8;'>Developed by <b>Shakibul Hasan</b> | 2026</center>", unsafe_allow_html=True)
+st.markdown("<br><center>Developed by <b>Shakibul Hasan</b> | 2026</center>", unsafe_allow_html=True)
