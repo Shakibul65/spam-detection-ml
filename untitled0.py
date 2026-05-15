@@ -1,74 +1,103 @@
+অবশ্যই! ডিজাইনটিকে আরও আকর্ষণীয় এবং আধুনিক করার জন্য আমরা এখন Glassmorphism ইফেক্ট (কাঁচের মতো স্বচ্ছ লুক), অ্যানিমেটেড ব্যাকগ্রাউন্ড এবং আরও সুন্দর বাটন ডিজাইন যোগ করব। এটি এখন দেখতে কোনো প্রিমিয়াম সফটওয়্যারের মতো লাগবে।
+
+নিচের এই কোডটি কপি করে আপনার GitHub-এর untitled0.py ফাইলে আগের সবকিছু মুছে দিয়ে পেস্ট করুন:
+
+Python
 import streamlit as st
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
 
-# ১. আধুনিক পেজ সেটআপ (Responsive Layout)
+# ১. পেজ সেটআপ এবং রেসপনসিভ কনফিগারেশন
 st.set_page_config(
-    page_title="SpamGuard AI",
+    page_title="SpamGuard AI Elite",
     page_icon="🛡️",
-    layout="wide",
-    initial_sidebar_state="expanded"
+    layout="wide"
 )
 
-# ২. কাস্টম সিএসএস (UI ডিজাইন উন্নত করার জন্য)
+# ২. কাস্টম সিএসএস (অত্যন্ত আধুনিক ডিজাইনের জন্য)
 st.markdown("""
     <style>
-    .main {
-        background-color: #f5f7f9;
-    }
-    .stButton>button {
-        width: 100%;
-        border-radius: 5px;
-        height: 3em;
-        background-color: #007bff;
+    /* মেইন ব্যাকগ্রাউন্ড */
+    .stApp {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        font-weight: bold;
     }
-    .stTextArea>div>div>textarea {
-        background-color: #ffffff;
-        border-radius: 10px;
+    
+    /* সাইডবার ডিজাইন */
+    section[data-testid="stSidebar"] {
+        background-color: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
     }
-    .result-box {
-        padding: 20px;
-        border-radius: 10px;
-        text-align: center;
-        font-size: 20px;
+
+    /* গ্লাস ইফেক্ট কার্ড */
+    .glass-card {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 30px;
+        border-radius: 20px;
+        backdrop-filter: blur(15px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+        margin-bottom: 20px;
+    }
+
+    /* বাটন ডিজাইন */
+    .stButton>button {
+        background: linear-gradient(90deg, #00d2ff 0%, #3a7bd5 100%);
+        border: none;
+        color: white;
+        padding: 15px 32px;
+        font-size: 18px;
         font-weight: bold;
+        border-radius: 50px;
+        transition: 0.3s;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    .stButton>button:hover {
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    /* ইনপুট বক্স */
+    .stTextArea textarea {
+        background: rgba(255, 255, 255, 0.9) !important;
+        color: #1e1e1e !important;
+        border-radius: 15px !important;
+    }
+    
+    h1, h2, h3 {
+        color: #ffffff;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
     </style>
     """, unsafe_allow_html=True)
 
-# ৩. সাইডবার (Professional Branding)
+# ৩. সাইডবার (Branding)
 with st.sidebar:
-    st.title("🛡️ SpamGuard AI")
+    st.markdown("<h2 style='text-align: center;'>🛡️ SpamGuard</h2>", unsafe_allow_html=True)
+    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=100)
     st.markdown("---")
-    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=80)
-    st.subheader("Developer Details")
-    st.write("**Name:** Shakibul Hasan")
-    st.caption("CSE Graduate | Professional Freelancer")
+    st.write("**Developed By:**")
+    st.info("Shakibul Hasan\n\nCSE Graduate | Freelancer")
     st.write("📍 Jamalpur, Bangladesh")
     st.markdown("---")
-    st.info("এই AI টুলটি আপনার টেক্সট বিশ্লেষণ করে সম্ভাব্য ফিশিং বা স্প্যাম শনাক্ত করতে পারে।")
+    st.caption("Version 2.0 - Powered by AI")
 
-# ৪. মেইন সেকশন ডিজাইন
-col1, col2 = st.columns([2, 1])
+# ৪. মেইন কন্টেন্ট
+st.markdown("<h1 style='text-align: center; font-size: 50px;'>🚀 Smart AI Spam Shield</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align: center; font-size: 20px;'>নিচের বক্সে আপনার ইমেইল বা মেসেজটি দিন এবং আমাদের AI দিয়ে সেকেন্ডেই পরীক্ষা করুন।</p>", unsafe_allow_html=True)
 
-with col1:
-    st.title("🚀 Smart Spam Detection System")
-    st.write("নিচে আপনার ইমেইল বা মেসেজটি পেস্ট করুন এবং দেখুন আমাদের AI মডেল এটি সম্পর্কে কী বলে।")
+# কার্ড লেআউট
+col1, col2, col3 = st.columns([0.1, 0.8, 0.1])
+with col2:
+    st.markdown('<div class="glass-card">', unsafe_allow_html=True)
     
-    user_input = st.text_area("", height=200, placeholder="আপনার মেসেজ এখানে লিখুন (যেমন: লটারি জেতা বা সাধারণ হাই-হ্যালো)...")
+    user_input = st.text_area("", height=180, placeholder="আপনার সন্দেহজনক মেসেজটি এখানে লিখুন...")
     
-    # ডেটা এবং মডেল (অল্প ডেটা হলেও স্ট্রাকচার শক্তিশালী)
+    # ডেটা এবং মডেল
     data = {
-        'text': [
-            'Free prize money now', 'Hi, how are you?', 'Claim your $1000 prize', 
-            'Meeting scheduled at 10am', 'Win a gift card', 'Please call me later',
-            'Congratulations! Cash reward', 'Are you coming today?', 
-            'Urgent: Account locked click here', 'The project file is attached'
-        ],
-        'label': ['spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham']
+        'text': ['Free cash prize now', 'Hi, how are you?', 'Claim reward', 'Meeting tomorrow', 'Win money now', 'Call me later'],
+        'label': ['spam', 'ham', 'spam', 'ham', 'spam', 'ham']
     }
     df = pd.DataFrame(data)
     cv = CountVectorizer()
@@ -76,34 +105,40 @@ with col1:
     model = MultinomialNB()
     model.fit(X, df['label'])
 
-    if st.button("Analyze Message"):
+    if st.button("এনালাইসিস শুরু করুন ✨"):
         if user_input:
             vect = cv.transform([user_input])
             prediction = model.predict(vect)
-            prob = model.predict_proba(vect) # আত্মবিশ্বাস যাচাই
+            prob = model.predict_proba(vect)
             
-            st.markdown("### 📊 Analysis Result")
+            st.markdown("---")
             if prediction[0] == 'spam':
-                st.error(f"⚠️ SPAM DETECTED!")
-                st.write(f"মডেলটি **{prob[0][1]*100:.2f}%** নিশ্চিত যে এটি একটি স্প্যাম মেসেজ।")
-                st.warning("পরামর্শ: এই ধরণের মেসেজের কোনো লিঙ্কে ক্লিক করবেন না এবং ব্যক্তিগত তথ্য দেবেন না।")
+                st.markdown(f"""
+                <div style="background: rgba(255, 75, 75, 0.2); padding: 20px; border-radius: 15px; border-left: 10px solid #ff4b4b;">
+                    <h3 style="color: #ff4b4b; margin: 0;">⚠️ এটি একটি স্প্যাম মেসেজ!</h3>
+                    <p>মডেলটির নিশ্চয়তা: {prob[0][1]*100:.1f}%</p>
+                </div>
+                """, unsafe_allow_html=True)
             else:
-                st.success(f"✅ SAFE (HAM)")
-                st.write(f"মডেলটি **{prob[0][0]*100:.2f}%** নিশ্চিত যে এটি নিরাপদ।")
-                st.info("এটি একটি সাধারণ যোগাযোগের মেসেজ বলে মনে হচ্ছে।")
+                st.markdown(f"""
+                <div style="background: rgba(40, 167, 69, 0.2); padding: 20px; border-radius: 15px; border-left: 10px solid #28a745;">
+                    <h3 style="color: #28a745; margin: 0;">✅ এটি নিরাপদ মেসেজ।</h3>
+                    <p>মডেলটির নিশ্চয়তা: {prob[0][0]*100:.1f}%</p>
+                </div>
+                """, unsafe_allow_html=True)
         else:
-            st.warning("দয়া করে বিশ্লেষণ করার জন্য একটি মেসেজ ইনপুট দিন।")
-
-with col2:
-    st.markdown("### 💡 কেন এটি ব্যবহার করবেন?")
-    st.write("- **রিয়েল-টাইম এনালাইসিস**")
-    st.write("- **গাণিতিক নির্ভুলতা**")
-    st.write("- **সহজ ইউজার ইন্টারফেস**")
+            st.warning("আগে একটি মেসেজ ইনপুট দিন!")
     
-    st.markdown("---")
-    st.write("### 🛠️ টেকনোলজি স্ট্যাক")
-    st.code("Python\nStreamlit\nScikit-learn\nNaive Bayes", language="text")
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# ৫. ফুটার
-st.markdown("---")
-st.markdown("<center>Developed by <b>Shakibul Hasan</b> | Powered by Machine Learning</center>", unsafe_allow_html=True)
+# ৫. স্ট্যাটাস কার্ডস
+c1, c2, c3 = st.columns(3)
+with c1:
+    st.markdown('<div class="glass-card" style="text-align: center;"><h3>🔒 সুরক্ষিত</h3><p>আপনার ডেটা কোথাও সেভ হয় না।</p></div>', unsafe_allow_html=True)
+with c2:
+    st.markdown('<div class="glass-card" style="text-align: center;"><h3>⚡ দ্রুত</h3><p>সেকেন্ডের মধ্যেই ফলাফল।</p></div>', unsafe_allow_html=True)
+with c3:
+    st.markdown('<div class="glass-card" style="text-align: center;"><h3>🎯 নির্ভুল</h3><p>অ্যাডভান্সড এমএল অ্যালগরিদম।</p></div>', unsafe_allow_html=True)
+
+# ফুটার
+st.markdown("<br><hr><center>Developed with ❤️ by Shakibul Hasan | CSE | 2026</center>",
