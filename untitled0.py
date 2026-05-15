@@ -1,8 +1,3 @@
-অবশ্যই! ডিজাইনটিকে আরও আকর্ষণীয় এবং আধুনিক করার জন্য আমরা এখন Glassmorphism ইফেক্ট (কাঁচের মতো স্বচ্ছ লুক), অ্যানিমেটেড ব্যাকগ্রাউন্ড এবং আরও সুন্দর বাটন ডিজাইন যোগ করব। এটি এখন দেখতে কোনো প্রিমিয়াম সফটওয়্যারের মতো লাগবে।
-
-নিচের এই কোডটি কপি করে আপনার GitHub-এর untitled0.py ফাইলে আগের সবকিছু মুছে দিয়ে পেস্ট করুন:
-
-Python
 import streamlit as st
 import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
@@ -141,4 +136,4 @@ with c3:
     st.markdown('<div class="glass-card" style="text-align: center;"><h3>🎯 নির্ভুল</h3><p>অ্যাডভান্সড এমএল অ্যালগরিদম।</p></div>', unsafe_allow_html=True)
 
 # ফুটার
-st.markdown("<br><hr><center>Developed with ❤️ by Shakibul Hasan | CSE | 2026</center>",
+st.markdown("<br><hr><center>Developed with ❤️ by Shakibul Hasan | CSE | 2026</center>", unsafe_allow_html=True)
