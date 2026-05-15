@@ -2,46 +2,56 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-import plotly.graph_objects as go
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score
 import sqlite3
 from datetime import datetime
 import time
 
-# ১. ডাটাবেস ফাংশন (SQLite)
-def get_db_connection():
-    conn = sqlite3.connect('security_logs.db', check_same_thread=False)
+# ==========================================
+# 1. Database Implementation (Fixing DatabaseError)
+# ==========================================
+def init_db():
+    conn = sqlite3.connect('spam_guard_pro.db', check_same_thread=False)
+    c = conn.cursor()
+    # Table structure fixed to match analytics
+    c.execute('''CREATE TABLE IF NOT EXISTS scan_logs 
+                 (message TEXT, prediction TEXT, confidence REAL, timestamp TEXT)''')
+    conn.commit()
     return conn
 
-def init_db():
-    conn = get_db_connection()
-    c = conn.cursor()
-    c.execute('CREATE TABLE IF NOT EXISTS scan_logs(message TEXT, status TEXT, score REAL, timestamp TEXT)')
-    conn.commit()
-    conn.close()
+conn = init_db()
 
-init_db()
-
-# ২. পেজ সেটআপ
+# ==========================================
+# 2. Page Configuration & UI Styling
+# ==========================================
 st.set_page_config(page_title="SpamGuard Pro | Security Suite", page_icon="🛡️", layout="wide")
 
-# ৩. কাস্টম ডিজাইন (CSS)
 st.markdown("""
     <style>
-    .main { background-color: #f8f9fa; }
-    .sidebar .sidebar-content { background-image: linear-gradient(#2e3b4e, #2e3b4e); color: white; }
-    .stButton>button { width: 100%; border-radius: 8px; background: #1e3c72; color: white; border: none; height: 3em; }
-    .status-box { padding: 20px; border-radius: 15px; background: white; border-left: 5px solid #1e3c72; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    .main { background-color: #f4f7f6; }
+    .stButton>button { 
+        width: 100%; border-radius: 10px; height: 3.5em; 
+        background: linear-gradient(90deg, #1e3c72, #2a5298); 
+        color: white; font-weight: bold; border: none;
+    }
+    .status-card { 
+        background: white; padding: 25px; border-radius: 15px; 
+        box-shadow: 0 8px 20px rgba(0,0,0,0.05); margin-bottom: 20px;
+        border-left: 5px solid #1e3c72;
+    }
+    .footer { text-align: center; color: #777; padding: 40px; }
     </style>
     """, unsafe_allow_html=True)
 
-# ৪. এআই মডেল লোড
+# ==========================================
+# 3. AI Model Training
+# ==========================================
 @st.cache_resource
-def train_model():
+def load_ai_model():
     data = {
-        'text': ['Win money', 'Hello friend', 'Claim reward', 'Call me', 'Free gift', 'Project update', 'Urgent verify', 'Lunch tomorrow'],
+        'text': ['Win free cash prize', 'Hi, how are you?', 'Claim your reward', 'Meeting at 5', 
+                 'Double your money', 'Project report', 'Urgent verify account', 'Lunch tomorrow'],
         'label': ['spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham']
     }
     df = pd.DataFrame(data)
@@ -51,15 +61,19 @@ def train_model():
     model.fit(X, df['label'])
     return cv, model
 
-cv, model = train_model()
+cv, model = load_ai_model()
 
-# ৫. সাইডবার নেভিগেশন
+# ==========================================
+# 4. Sidebar Navigation (Fixing NameError)
+# ==========================================
 with st.sidebar:
     st.title("🛡️ SpamGuard Pro")
-    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=100)
+    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=90)
     st.markdown("### Dev: Shakibul Hasan")
     st.caption("Computer Science & Engineering")
-    st.markdown("---")
+    st.write("---")
+    
+    # Matching exact strings with main app logic to prevent NameError
     menu = st.radio("Applications", [
         "🏠 Master Dashboard", 
         "🔍 Spam Detector AI", 
@@ -69,83 +83,128 @@ with st.sidebar:
         "💡 Cyber Security Insights",
         "📂 Developer API"
     ])
-    st.markdown("---")
+    st.write("---")
     st.success("System Status: Online")
 
-# ৬. অ্যাপ্লিকেশন লজিক
+# ==========================================
+# 5. Main Application Logic
+# ==========================================
+
 if menu == "🏠 Master Dashboard":
-    st.title("🚀 Enterprise Dashboard")
+    st.title("🚀 Enterprise Security Dashboard")
     st.image("https://img.freepik.com/free-vector/cyber-security-concept_23-2148532223.jpg", use_container_width=True)
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Threats Detected", "1,240", "+5%")
-    c2.metric("Safe Messages", "10,430", "+12%")
-    c3.metric("System Health", "99.9%", "Stable")
     
-    st.subheader("Weekly Analytics")
-    st.line_chart(np.random.randn(10, 2))
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Total Scanned", "15.2k", "+14%")
+    col2.metric("Threats Blocked", "3,102", "+8%")
+    col3.metric("System Health", "99.9%", "Stable")
+    col4.metric("Risk Level", "Low", "Secure")
+    
+    st.write("---")
+    st.subheader("📡 Global Attack Patterns (Live Simulation)")
+    chart_data = pd.DataFrame(np.random.randint(10, 100, size=(20, 2)), columns=['Phishing', 'Malware'])
+    st.line_chart(chart_data)
 
 elif menu == "🔍 Spam Detector AI":
-    st.title("🔍 Advanced Spam Guard")
-    user_text = st.text_area("Enter Message:", placeholder="Type or paste here...")
-    if st.button("Analyze Now"):
-        if user_text:
-            with st.spinner("Processing..."):
+    st.title("🔍 Advanced Spam Analysis Engine")
+    input_text = st.text_area("Enter content for analysis:", height=150, placeholder="Paste email or SMS here...")
+    
+    if st.button("Start AI Scan 🚀"):
+        if input_text:
+            with st.spinner('Analyzing patterns...'):
                 time.sleep(1)
-                vect = cv.transform([user_text])
-                prediction = model.predict(vect)[0]
+                vect = cv.transform([input_text])
+                res = model.predict(vect)[0]
                 prob = model.predict_proba(vect)[0]
-                score = max(prob) * 100
+                conf = max(prob) * 100
                 
-                # ডাটাবেসে সেভ
-                conn = get_db_connection()
+                # Database Update
                 c = conn.cursor()
-                c.execute('INSERT INTO scan_logs VALUES (?,?,?,?)', (user_text, prediction, score, datetime.now()))
+                now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                c.execute('INSERT INTO scan_logs VALUES (?,?,?,?)', (input_text, res, conf, now))
                 conn.commit()
-                conn.close()
                 
-                st.markdown("<div class='status-box'>", unsafe_allow_html=True)
-                if prediction == 'spam':
-                    st.error(f"🚨 ALERT: SPAM DETECTED! (Confidence: {score:.1f}%)")
+                st.markdown("<div class='status-card'>", unsafe_allow_html=True)
+                if res == 'spam':
+                    st.error(f"🚨 ALERT: SPAM DETECTED! (Confidence: {conf:.1f}%)")
                 else:
-                    st.success(f"✅ MESSAGE IS SAFE (Confidence: {score:.1f}%)")
+                    st.success(f"✅ CLEAN CONTENT (Confidence: {conf:.1f}%)")
                 st.markdown("</div>", unsafe_allow_html=True)
+        else:
+            st.warning("Please enter some text first.")
 
 elif menu == "🔗 URL Intelligence":
     st.title("🔗 Phishing Link Intelligence")
-    url = st.text_input("Enter URL:")
-    if st.button("Scan Link"):
-        risk = 85 if any(x in url for x in ['login', 'verify', 'free']) else 10
-        st.write(f"### Risk Score: {risk}/100")
-        if risk > 50: st.error("Suspicious Link!")
-        else: st.success("Safe Link Pattern.")
+    st.image("https://img.freepik.com/free-vector/phishing-concept-flat-design_23-2148529367.jpg", width=600)
+    url_input = st.text_input("Enter URL to scan:", "https://")
+    
+    if st.button("Scan URL Safety ⚙️"):
+        # Fixed logic for risk score
+        risk = 85 if any(x in url_input for x in ['verify', 'login', 'win', 'prize']) else 10
+        st.markdown(f"<div class='status-card'>Risk Score: {risk}/100</div>", unsafe_allow_html=True)
+        if risk > 50: st.error("Suspicious URL structure detected!")
+        else: st.success("This link matches standard safety profiles.")
+
+elif menu == "📁 Batch Processing":
+    st.title("📁 Bulk Data Processing")
+    st.write("Upload a CSV file containing a 'text' column for mass analysis.")
+    uploaded_file = st.file_uploader("Choose CSV file", type="csv")
+    if uploaded_file:
+        df_batch = pd.read_csv(uploaded_file)
+        st.write("Preview of data:", df_batch.head())
+        if st.button("Analyze Batch"):
+            st.info("Processing bulk data...")
 
 elif menu == "🗄️ Database Logs":
     st.title("🗄️ System Scan History")
-    conn = get_db_connection()
-    df_logs = pd.read_sql_query("SELECT * FROM scan_logs ORDER BY timestamp DESC", conn)
-    st.dataframe(df_logs, use_container_width=True)
-    if st.button("Clear History"):
-        conn.execute("DELETE FROM scan_logs")
-        conn.commit()
-        st.rerun()
-    conn.close()
+    st.write("Displaying logs directly from SQLite database.")
+    
+    try:
+        # Fetching data directly for display
+        df_logs = pd.read_sql_query("SELECT * FROM scan_logs ORDER BY timestamp DESC", conn)
+        if not df_logs.empty:
+            st.dataframe(df_logs, use_container_width=True)
+            if st.button("Clear History"):
+                c = conn.cursor()
+                c.execute("DELETE FROM scan_logs")
+                conn.commit()
+                st.rerun()
+        else:
+            st.info("No records found in database yet.")
+    except Exception as e:
+        st.error(f"Database Error: {e}")
 
 elif menu == "💡 Cyber Security Insights":
-    st.title("💡 Safety Intelligence")
+    st.title("💡 Cybersecurity Intelligence Center")
     st.image("https://img.freepik.com/free-photo/standard-quality-control-concept-m_23-2150041848.jpg", use_container_width=True)
-    st.markdown("""
-    - **Verify Identity:** Never share OTP or passwords.
-    - **Check Links:** Always look for HTTPS in the URL.
-    - **Report Spam:** Help the AI learn by reporting suspicious content.
-    """)
+    
+    tab1, tab2 = st.tabs(["🛡️ Safety Protocols", "📊 Attack Statistics"])
+    with tab1:
+        st.markdown("""
+        ### Essential Safety Tips:
+        * **2FA:** Enable Multi-Factor Authentication on all accounts.
+        * **Link Check:** Always hover over links to see the real destination.
+        * **Updates:** Keep your software and operating system updated.
+        """)
+    with tab2:
+        fig = px.pie(names=['Phishing', 'Malware', 'Social Eng.'], values=[60, 25, 15], hole=0.3)
+        st.plotly_chart(fig, use_container_width=True)
 
 elif menu == "📂 Developer API":
-    st.title("📂 Integration Portal")
+    st.title("📂 Integration & API Portal")
+    st.image("https://img.freepik.com/free-vector/api-concept-illustration_114360-9397.jpg", width=500)
+    st.markdown("### Python Integration Example:")
     st.code("""
 import requests
-def scan_api(text):
-    return requests.post("https://api.spamguard.pro/scan", json={"msg": text}).json()
+
+def query_spamguard(text):
+    api_endpoint = "https://api.spamguard.pro/v1/scan"
+    payload = {"content": text}
+    response = requests.post(api_endpoint, json=payload)
+    return response.json()
     """, language="python")
 
-# ফুটার
-st.markdown(f"<div style='text-align: center; margin-top: 50px; color: #888;'>Developed by **Shakibul Hasan** | CSE | {datetime.now().year}</div>", unsafe_allow_html=True)
+# ==========================================
+# 6. Footer
+# ==========================================
+st.markdown(f"<div class='footer'>Developed by **Shakibul Hasan** | CSE Student | {datetime.now().year}</div>", unsafe_allow_html=True)
