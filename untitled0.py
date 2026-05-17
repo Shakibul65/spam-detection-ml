@@ -4,6 +4,8 @@ import numpy as np
 import plotly.express as px
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression  # নতুন যুক্ত করা হয়েছে
+from sklearn.svm import SVC                          # নতুন যুক্ত করা হয়েছে
 import sqlite3
 from datetime import datetime
 import time
@@ -13,7 +15,6 @@ import time
 # ==========================================
 @st.cache_resource
 def get_db_connection():
-    # ডেটাবেজ কানেকশনকে ক্যাশ করা হলো যাতে প্রতি রান-এ নতুন কানেকশন তৈরি না হয়
     conn = sqlite3.connect('spam_guard_pro.db', check_same_thread=False)
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS scan_logs 
@@ -47,23 +48,37 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. AI Model Training
+# 3. AI Model Training (MultinomialNB, Logistic Regression, SVM)
 # ==========================================
 @st.cache_resource
-def load_ai_model():
+def load_ai_models():
+    # ডামি ডেটাসেট (ভলিউম বাড়ানোর জন্য আরও কিছু স্যাম্পল যুক্ত করা হলো)
     data = {
         'text': ['Win free cash prize', 'Hi, how are you?', 'Claim your reward', 'Meeting at 5', 
-                 'Double your money', 'Project report', 'Urgent verify account', 'Lunch tomorrow'],
-        'label': ['spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham']
+                 'Double your money', 'Project report', 'Urgent verify account', 'Lunch tomorrow',
+                 'Get free iPhone now', 'Can we talk later?', 'Congratulations you won', 'Please review the document'],
+        'label': ['spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham', 'spam', 'ham']
     }
     df = pd.DataFrame(data)
     cv = CountVectorizer()
     X = cv.fit_transform(df['text'])
-    model = MultinomialNB()
-    model.fit(X, df['label'])
-    return cv, model
+    y = df['label']
+    
+    # ১. Naive Bayes
+    nb_model = MultinomialNB()
+    nb_model.fit(X, y)
+    
+    # ২. Logistic Regression
+    lr_model = LogisticRegression()
+    lr_model.fit(X, y)
+    
+    # ৩. SVM (Probability=True দেওয়া হয়েছে যাতে confidence score/proba বের করা যায়)
+    svm_model = SVC(probability=True, kernel='linear')
+    svm_model.fit(X, y)
+    
+    return cv, {"Naive Bayes": nb_model, "Logistic Regression": lr_model, "SVM": svm_model}
 
-cv, model = load_ai_model()
+cv, models_dict = load_ai_models()
 
 # ==========================================
 # 4. Sidebar Navigation
@@ -108,18 +123,29 @@ if menu == "🏠 Master Dashboard":
 
 elif menu == "🔍 Spam Detector AI":
     st.title("🔍 Advanced Spam Analysis Engine")
+    
+    # অ্যালগরিদম সিলেক্ট করার অপশন যুক্ত করা হয়েছে
+    selected_algo = st.selectbox("Select AI Algorithm:", ["Naive Bayes", "Logistic Regression", "SVM"])
+    
     input_text = st.text_area("Enter content for analysis:", height=150, placeholder="Paste email or SMS here...")
     
     if st.button("Start AI Scan 🚀"):
         if input_text:
-            with st.spinner('Analyzing patterns...'):
+            with st.spinner(f'Analyzing patterns using {selected_algo}...'):
                 time.sleep(1)
+                
+                # টেক্সট ভেক্টরাইজেশন
                 vect = cv.transform([input_text])
-                res = model.predict(vect)[0]
-                prob = model.predict_proba(vect)[0]
+                
+                # সিলেক্টেড মডেল লোড করা
+                current_model = models_dict[selected_algo]
+                
+                # প্রেডিকশন এবং কনফিডেন্স স্কোর হিসাব করা
+                res = current_model.predict(vect)[0]
+                prob = current_model.predict_proba(vect)[0]
                 conf = max(prob) * 100
                 
-                # Database Update (Safe implementation)
+                # Database Update
                 c = conn.cursor()
                 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 c.execute('INSERT INTO scan_logs VALUES (?,?,?,?)', (input_text, res, conf, now))
@@ -130,8 +156,7 @@ elif menu == "🔍 Spam Detector AI":
                 else:
                     st.success(f"✅ CLEAN CONTENT (Confidence: {conf:.1f}%)")
                 
-                # আপনি চাইলে স্ট্যাটাস কার্ডের ভেতরেও দেখাতে পারেন
-                st.markdown(f"<div class='status-card'><b>Analysis Result:</b> Developed model predicted this text as <b>{res.upper()}</b> with {conf:.1f}% confidence.</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='status-card'><b>Algorithm Used:</b> {selected_algo}<br><b>Prediction:</b> This text is flagged as <b>{res.upper()}</b> with {conf:.1f}% confidence.</div>", unsafe_allow_html=True)
         else:
             st.warning("Please enter some text first.")
 
@@ -163,7 +188,6 @@ elif menu == "🗄️ Database Logs":
     st.write("Displaying logs directly from SQLite database.")
     
     try:
-        # ডেটাবেজ থেকে লাইভ ডেটা রিড করা
         df_logs = pd.read_sql_query("SELECT * FROM scan_logs ORDER BY timestamp DESC", conn)
         if not df_logs.empty:
             st.dataframe(df_logs, use_container_width=True)
