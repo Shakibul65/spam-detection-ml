@@ -4,8 +4,8 @@ import numpy as np
 import plotly.express as px
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
-from sklearn.linear_model import LogisticRegression  # নতুন যুক্ত করা হয়েছে
-from sklearn.svm import SVC                          # নতুন যুক্ত করা হয়েছে
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 import sqlite3
 from datetime import datetime
 import time
@@ -17,6 +17,7 @@ import time
 def get_db_connection():
     conn = sqlite3.connect('spam_guard_pro.db', check_same_thread=False)
     c = conn.cursor()
+    # এখানে আমরা মডেলের নাম রাখার জন্য 'model_used' কলাম যোগ করতে পারি, অথবা আগের স্ট্রাকচারই ঠিক রাখতে পারি
     c.execute('''CREATE TABLE IF NOT EXISTS scan_logs 
                  (message TEXT, prediction TEXT, confidence REAL, timestamp TEXT)''')
     conn.commit()
@@ -38,8 +39,8 @@ st.markdown("""
         color: white; font-weight: bold; border: none;
     }
     .status-card { 
-        background: white; padding: 25px; border-radius: 15px; 
-        box-shadow: 0 8px 20px rgba(0,0,0,0.05); margin-bottom: 20px;
+        background: white; padding: 20px; border-radius: 12px; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px;
         border-left: 5px solid #1e3c72;
         color: black;
     }
@@ -48,11 +49,10 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. AI Model Training (MultinomialNB, Logistic Regression, SVM)
+# 3. AI Model Training (Back-end Models)
 # ==========================================
 @st.cache_resource
 def load_ai_models():
-    # ডামি ডেটাসেট (ভলিউম বাড়ানোর জন্য আরও কিছু স্যাম্পল যুক্ত করা হলো)
     data = {
         'text': ['Win free cash prize', 'Hi, how are you?', 'Claim your reward', 'Meeting at 5', 
                  'Double your money', 'Project report', 'Urgent verify account', 'Lunch tomorrow',
@@ -64,15 +64,13 @@ def load_ai_models():
     X = cv.fit_transform(df['text'])
     y = df['label']
     
-    # ১. Naive Bayes
+    # ব্যাকএন্ডের ৩টি মডেল ট্রেইনিং
     nb_model = MultinomialNB()
     nb_model.fit(X, y)
     
-    # ২. Logistic Regression
     lr_model = LogisticRegression()
     lr_model.fit(X, y)
     
-    # ৩. SVM (Probability=True দেওয়া হয়েছে যাতে confidence score/proba বের করা যায়)
     svm_model = SVC(probability=True, kernel='linear')
     svm_model.fit(X, y)
     
@@ -122,41 +120,61 @@ if menu == "🏠 Master Dashboard":
     st.line_chart(chart_data)
 
 elif menu == "🔍 Spam Detector AI":
-    st.title("🔍 Advanced Spam Analysis Engine")
-    
-    # অ্যালগরিদম সিলেক্ট করার অপশন যুক্ত করা হয়েছে
-    selected_algo = st.selectbox("Select AI Algorithm:", ["Naive Bayes", "Logistic Regression", "SVM"])
+    st.title("🔍 Multi-Model Spam Analysis Engine")
+    st.caption("কোড ব্যাকএন্ডে একসাথে ৩টি অ্যালগরিদম (Naive Bayes, Logistic Regression, SVM) দিয়ে প্যারালাল অ্যানালাইসিস করবে।")
     
     input_text = st.text_area("Enter content for analysis:", height=150, placeholder="Paste email or SMS here...")
     
     if st.button("Start AI Scan 🚀"):
         if input_text:
-            with st.spinner(f'Analyzing patterns using {selected_algo}...'):
+            with st.spinner('Running multi-algorithm cross-verification...'):
                 time.sleep(1)
                 
                 # টেক্সট ভেক্টরাইজেশন
                 vect = cv.transform([input_text])
                 
-                # সিলেক্টেড মডেল লোড করা
-                current_model = models_dict[selected_algo]
+                results = []
+                # ব্যাকএন্ডে লুপ চালিয়ে ৩টি মডেল থেকেই প্রেডিকশন বের করা হচ্ছে
+                for algo_name, current_model in models_dict.items():
+                    res = current_model.predict(vect)[0]
+                    prob = current_model.predict_proba(vect)[0]
+                    conf = max(prob) * 100
+                    results.append({
+                        "Algorithm": algo_name,
+                        "Prediction": res.upper(),
+                        "Confidence": f"{conf:.2f}%",
+                        "Status": "🚨 SPAM" if res == 'spam' else "✅ CLEAN"
+                    })
                 
-                # প্রেডিকশন এবং কনফিডেন্স স্কোর হিসাব করা
-                res = current_model.predict(vect)[0]
-                prob = current_model.predict_proba(vect)[0]
-                conf = max(prob) * 100
-                
-                # Database Update
+                # ডেটাবেজে লগ রাখার জন্য (মেকানিজম ঠিক রাখতে প্রথম রেজাল্ট বা মেজোরিটি ভোট সেভ করা যায়, এখানে ১ম টি রাখা হলো)
                 c = conn.cursor()
                 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                c.execute('INSERT INTO scan_logs VALUES (?,?,?,?)', (input_text, res, conf, now))
+                # ডেমো হিসেবে ১ম মডেলের ডাটা লগ করা হলো
+                c.execute('INSERT INTO scan_logs VALUES (?,?,?,?)', (input_text, results[0]["Prediction"].lower(), float(results[0]["Confidence"].replace('%','')), now))
                 conn.commit()
                 
-                if res == 'spam':
-                    st.error(f"🚨 ALERT: SPAM DETECTED! (Confidence: {conf:.1f}%)")
-                else:
-                    st.success(f"✅ CLEAN CONTENT (Confidence: {conf:.1f}%)")
+                # ফলাফল প্রদর্শনের জন্য UI সাজানো
+                st.write("### 📊 Hybrid AI Scan Results:")
                 
-                st.markdown(f"<div class='status-card'><b>Algorithm Used:</b> {selected_algo}<br><b>Prediction:</b> This text is flagged as <b>{res.upper()}</b> with {conf:.1f}% confidence.</div>", unsafe_allow_html=True)
+                # ৩টি আলাদা কলামে ৩টি মডেলের রিপোর্ট শো করা
+                cols = st.columns(3)
+                for idx, r in enumerate(results):
+                    with cols[idx]:
+                        st.markdown(f"""
+                        <div class='status-card'>
+                            <h3>{r['Algorithm']}</h3>
+                            <hr style='margin: 10px 0;'>
+                            <p>Result: <b>{r['Status']}</b></p>
+                            <p>Confidence: <b>{r['Confidence']}</b></p>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        
+                        # ইন্ডিভিজুয়াল স্ট্রীমলিট অ্যালার্ট বাটন বা টেক্সট
+                        if r['Prediction'] == 'SPAM':
+                            st.error(f"{r['Algorithm']}: Thread Flagged!")
+                        else:
+                            st.success(f"{r['Algorithm']}: Clear!")
+                            
         else:
             st.warning("Please enter some text first.")
 
