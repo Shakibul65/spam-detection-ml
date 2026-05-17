@@ -1,30 +1,83 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import sqlite3
 import plotly.express as px
-from datetime import datetime
+import sqlite3
 import time
 
-# ML Libraries
+from datetime import datetime
+
+# ML Algorithms
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
+from sklearn.linear_model import LogisticRegression
+from sklearn.svm import SVC
 
-from sklearn.svm import SVR
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline
+# =========================================================
+# PAGE CONFIG
+# =========================================================
 
-# =====================================================
+st.set_page_config(
+    page_title="SpamGuard Pro AI",
+    page_icon="🛡️",
+    layout="wide"
+)
+
+# =========================================================
+# CUSTOM CSS
+# =========================================================
+
+st.markdown("""
+<style>
+
+.main{
+    background-color:#f5f7fa;
+}
+
+.stButton>button{
+    width:100%;
+    height:3em;
+    border-radius:10px;
+    border:none;
+    background:linear-gradient(90deg,#1e3c72,#2a5298);
+    color:white;
+    font-weight:bold;
+}
+
+.card{
+    background:white;
+    padding:20px;
+    border-radius:15px;
+    box-shadow:0px 5px 15px rgba(0,0,0,0.1);
+    margin-bottom:20px;
+}
+
+.footer{
+    text-align:center;
+    padding:30px;
+    color:gray;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
+# =========================================================
 # DATABASE
-# =====================================================
+# =========================================================
 
 def init_db():
-    conn = sqlite3.connect("ai_security_suite.db", check_same_thread=False)
+
+    conn = sqlite3.connect(
+        "spam_guard_pro.db",
+        check_same_thread=False
+    )
+
     c = conn.cursor()
 
     c.execute("""
     CREATE TABLE IF NOT EXISTS scan_logs(
         message TEXT,
+        algorithm TEXT,
         prediction TEXT,
         confidence REAL,
         timestamp TEXT
@@ -32,75 +85,38 @@ def init_db():
     """)
 
     conn.commit()
+
     return conn
 
 conn = init_db()
 
-# =====================================================
-# PAGE CONFIG
-# =====================================================
-
-st.set_page_config(
-    page_title="AI Security & Real Estate Suite",
-    page_icon="🛡️",
-    layout="wide"
-)
-
-# =====================================================
-# CUSTOM CSS
-# =====================================================
-
-st.markdown("""
-<style>
-
-.main {
-    background-color:#f5f7fa;
-}
-
-.stButton>button {
-    width:100%;
-    border-radius:10px;
-    height:3em;
-    background:linear-gradient(90deg,#1e3c72,#2a5298);
-    color:white;
-    border:none;
-    font-weight:bold;
-}
-
-.card {
-    background:white;
-    padding:20px;
-    border-radius:15px;
-    box-shadow:0 5px 15px rgba(0,0,0,0.1);
-    margin-bottom:20px;
-}
-
-</style>
-""", unsafe_allow_html=True)
-
-# =====================================================
-# SPAM AI MODEL
-# =====================================================
+# =========================================================
+# TRAIN AI MODELS
+# =========================================================
 
 @st.cache_resource
-def load_spam_model():
+def train_models():
 
     data = {
         "text":[
-            "Win free money",
-            "Claim your reward now",
-            "Meeting at 5 pm",
+            "Win free cash prize now",
+            "Claim your reward",
+            "Urgent verify your account",
+            "Double your income instantly",
+            "Meeting at 5 PM",
+            "Project submission tomorrow",
             "Lunch tomorrow?",
-            "Urgent verify account",
-            "Project submission"
+            "Let's attend class"
         ],
 
         "label":[
             "spam",
             "spam",
-            "ham",
-            "ham",
             "spam",
+            "spam",
+            "ham",
+            "ham",
+            "ham",
             "ham"
         ]
     }
@@ -111,223 +127,313 @@ def load_spam_model():
 
     X = cv.fit_transform(df["text"])
 
-    model = MultinomialNB()
+    y = df["label"]
 
-    model.fit(X, df["label"])
+    # Naive Bayes
+    nb_model = MultinomialNB()
+    nb_model.fit(X, y)
 
-    return cv, model
+    # Logistic Regression
+    lr_model = LogisticRegression()
+    lr_model.fit(X, y)
 
-cv, spam_model = load_spam_model()
+    # SVM
+    svm_model = SVC(probability=True)
+    svm_model.fit(X, y)
 
-# =====================================================
-# HOUSE PRICE MODEL (SVM)
-# =====================================================
+    return cv, nb_model, lr_model, svm_model
 
-@st.cache_resource
-def train_house_model():
+cv, nb_model, lr_model, svm_model = train_models()
 
-    # Sample Dataset
-
-    house_data = pd.DataFrame({
-
-        "area":[1000,1200,1500,1800,2000,2500,3000],
-        "bedrooms":[2,2,3,3,4,4,5],
-        "age":[10,8,6,5,4,3,2],
-        "price":[200000,250000,320000,400000,500000,650000,800000]
-
-    })
-
-    X = house_data[["area","bedrooms","age"]]
-    y = house_data["price"]
-
-    model = Pipeline([
-        ("scaler", StandardScaler()),
-        ("svm", SVR(kernel='rbf'))
-    ])
-
-    model.fit(X, y)
-
-    return model
-
-house_model = train_house_model()
-
-# =====================================================
+# =========================================================
 # SIDEBAR
-# =====================================================
+# =========================================================
 
 with st.sidebar:
 
-    st.title("🛡️ AI Security Suite")
+    st.title("🛡️ SpamGuard Pro")
+
+    st.image(
+        "https://cdn-icons-png.flaticon.com/512/3135/3135715.png",
+        width=100
+    )
+
+    st.markdown("### Developer")
+    st.caption("Shakibul Hasan")
+
+    st.write("---")
 
     menu = st.radio(
         "Navigation",
         [
             "🏠 Dashboard",
             "🔍 Spam Detector",
-            "🏡 House Price Prediction",
             "📊 Analytics",
-            "🗄️ Database Logs"
+            "🗄️ Database Logs",
+            "💡 Security Tips"
         ]
     )
 
-# =====================================================
+    st.write("---")
+
+    st.success("System Online ✅")
+
+# =========================================================
 # DASHBOARD
-# =====================================================
+# =========================================================
 
 if menu == "🏠 Dashboard":
 
-    st.title("🚀 Enterprise AI Dashboard")
+    st.title("🚀 Enterprise Security Dashboard")
 
-    col1,col2,col3,col4 = st.columns(4)
+    col1, col2, col3, col4 = st.columns(4)
 
-    col1.metric("Total Scans","12K","+15%")
-    col2.metric("Threats Blocked","2.5K","+8%")
-    col3.metric("AI Accuracy","98%","+2%")
-    col4.metric("System Health","99.9%","Stable")
+    col1.metric("Total Scans", "15.2K", "+12%")
+    col2.metric("Threats Blocked", "3,240", "+8%")
+    col3.metric("AI Accuracy", "98.7%", "+2%")
+    col4.metric("System Health", "99.9%", "Stable")
 
     st.write("---")
 
+    st.subheader("📡 Live Threat Monitoring")
+
     chart_data = pd.DataFrame(
-        np.random.randint(20,100,size=(20,2)),
-        columns=["Spam","Threats"]
+        np.random.randint(10,100,size=(20,3)),
+        columns=["Spam","Malware","Phishing"]
     )
 
     st.line_chart(chart_data)
 
-# =====================================================
+    st.write("---")
+
+    fig = px.pie(
+        names=["Spam","Safe","Malware"],
+        values=[55,30,15],
+        hole=0.4
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
+
+# =========================================================
 # SPAM DETECTOR
-# =====================================================
+# =========================================================
 
 elif menu == "🔍 Spam Detector":
 
-    st.title("🔍 AI Spam Detector")
+    st.title("🔍 AI Spam Detection System")
 
-    text = st.text_area("Enter Message")
+    st.markdown("### Choose AI Algorithm")
 
-    if st.button("Analyze Message"):
+    algo = st.selectbox(
+        "Select Model",
+        [
+            "Naive Bayes",
+            "Logistic Regression",
+            "SVM"
+        ]
+    )
+
+    text = st.text_area(
+        "Enter Email / SMS",
+        height=180,
+        placeholder="Paste message here..."
+    )
+
+    if st.button("Analyze Message 🚀"):
 
         if text:
 
-            with st.spinner("Scanning..."):
+            with st.spinner("Analyzing using AI..."):
 
                 time.sleep(1)
 
                 vect = cv.transform([text])
 
-                result = spam_model.predict(vect)[0]
+                # MODEL SELECTION
 
-                prob = spam_model.predict_proba(vect)[0]
+                if algo == "Naive Bayes":
+                    model = nb_model
 
-                conf = np.max(prob) * 100
+                elif algo == "Logistic Regression":
+                    model = lr_model
 
-                # DB Save
+                else:
+                    model = svm_model
+
+                prediction = model.predict(vect)[0]
+
+                probability = model.predict_proba(vect)[0]
+
+                confidence = np.max(probability) * 100
+
+                # DATABASE SAVE
 
                 c = conn.cursor()
 
                 c.execute(
-                    "INSERT INTO scan_logs VALUES (?,?,?,?)",
+                    """
+                    INSERT INTO scan_logs
+                    VALUES (?,?,?,?,?)
+                    """,
                     (
                         text,
-                        result,
-                        conf,
+                        algo,
+                        prediction,
+                        confidence,
                         datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     )
                 )
 
                 conn.commit()
 
-                if result == "spam":
+                # RESULT CARD
 
-                    st.error(f"🚨 Spam Detected ({conf:.2f}%)")
+                st.markdown(
+                    "<div class='card'>",
+                    unsafe_allow_html=True
+                )
+
+                if prediction == "spam":
+
+                    st.error(
+                        f"🚨 SPAM DETECTED\n\nConfidence: {confidence:.2f}%"
+                    )
 
                 else:
 
-                    st.success(f"✅ Safe Message ({conf:.2f}%)")
+                    st.success(
+                        f"✅ SAFE MESSAGE\n\nConfidence: {confidence:.2f}%"
+                    )
+
+                st.markdown(
+                    "</div>",
+                    unsafe_allow_html=True
+                )
+
+                # Probability Chart
+
+                probs_df = pd.DataFrame({
+                    "Class":["Ham","Spam"],
+                    "Probability":probability
+                })
+
+                fig = px.bar(
+                    probs_df,
+                    x="Class",
+                    y="Probability",
+                    color="Class",
+                    text_auto=True
+                )
+
+                st.plotly_chart(
+                    fig,
+                    use_container_width=True
+                )
 
         else:
 
-            st.warning("Enter a message")
+            st.warning("Please enter a message.")
 
-# =====================================================
-# HOUSE PRICE PREDICTION
-# =====================================================
-
-elif menu == "🏡 House Price Prediction":
-
-    st.title("🏡 AI House Price Predictor (SVM)")
-
-    st.markdown("### Enter House Information")
-
-    area = st.slider("Area (sq ft)",1000,5000,1500)
-
-    bedrooms = st.selectbox("Bedrooms",[1,2,3,4,5])
-
-    age = st.slider("House Age",0,30,5)
-
-    if st.button("Predict House Price"):
-
-        data = pd.DataFrame({
-            "area":[area],
-            "bedrooms":[bedrooms],
-            "age":[age]
-        })
-
-        prediction = house_model.predict(data)[0]
-
-        st.success(f"💰 Estimated Price: ${prediction:,.0f}")
-
-        # Visualization
-
-        fig = px.bar(
-            x=["Predicted Price"],
-            y=[prediction],
-            color=[prediction],
-            text=[f"${prediction:,.0f}"]
-        )
-
-        st.plotly_chart(fig, use_container_width=True)
-
-# =====================================================
+# =========================================================
 # ANALYTICS
-# =====================================================
+# =========================================================
 
 elif menu == "📊 Analytics":
 
-    st.title("📊 AI Analytics")
+    st.title("📊 Security Analytics")
 
-    fig = px.pie(
-        names=["Spam","Safe","Threats"],
-        values=[45,40,15],
-        hole=0.4
+    data = pd.DataFrame({
+        "Threat":["Spam","Phishing","Malware","Safe"],
+        "Count":[120,80,45,300]
+    })
+
+    fig = px.bar(
+        data,
+        x="Threat",
+        y="Count",
+        color="Threat",
+        text_auto=True
     )
 
     st.plotly_chart(fig, use_container_width=True)
 
-# =====================================================
+# =========================================================
 # DATABASE LOGS
-# =====================================================
+# =========================================================
 
 elif menu == "🗄️ Database Logs":
 
     st.title("🗄️ Scan History")
 
-    df_logs = pd.read_sql_query(
-        "SELECT * FROM scan_logs ORDER BY timestamp DESC",
-        conn
-    )
+    try:
 
-    if not df_logs.empty:
+        logs = pd.read_sql_query(
+            "SELECT * FROM scan_logs ORDER BY timestamp DESC",
+            conn
+        )
 
-        st.dataframe(df_logs, use_container_width=True)
+        if not logs.empty:
 
-    else:
+            st.dataframe(
+                logs,
+                use_container_width=True
+            )
 
-        st.info("No logs available")
+            if st.button("Clear Database"):
 
-# =====================================================
+                c = conn.cursor()
+
+                c.execute("DELETE FROM scan_logs")
+
+                conn.commit()
+
+                st.success("Database Cleared ✅")
+
+                st.rerun()
+
+        else:
+
+            st.info("No logs found.")
+
+    except Exception as e:
+
+        st.error(f"Database Error: {e}")
+
+# =========================================================
+# SECURITY TIPS
+# =========================================================
+
+elif menu == "💡 Security Tips":
+
+    st.title("💡 Cyber Security Tips")
+
+    st.markdown("""
+    ### 🛡️ Essential Protection Rules
+
+    ✅ Enable Two-Factor Authentication (2FA)
+
+    ✅ Never click suspicious links
+
+    ✅ Keep your software updated
+
+    ✅ Use strong passwords
+
+    ✅ Avoid unknown email attachments
+
+    ✅ Verify URLs before login
+    """)
+
+# =========================================================
 # FOOTER
-# =====================================================
+# =========================================================
 
-st.write("---")
-
-st.caption("Developed by Shakibul Hasan | AI Security Suite 2026")
+st.markdown(
+    f"""
+    <div class='footer'>
+    Developed by <b>Shakibul Hasan</b> |
+    AI Cyber Security Suite |
+    {datetime.now().year}
+    </div>
+    """,
+    unsafe_allow_html=True
+)
