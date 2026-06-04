@@ -138,7 +138,9 @@ if menu == "🏠 Master Dashboard":
 
 elif menu == "🔍 URL Phishing Detector AI":
     st.title("🔍 Multi-Model Phishing URL Analysis Engine")
-    st.caption("কোড ব্যাকএন্ডে একসাথে ৪টি অ্যাডভান্সড মডেল ব্যবহার করে রিয়েল-টাইম স্ক্যান এবং সাথে সাথে লাইভ বেঞ্চমার্কিং প্রদর্শন করবে।")
+    
+    # ক্যাপশন বা সাবটাইটেলটি এখানে সম্পূর্ণ প্রফেশনাল ইংরেজিতে পরিবর্তন করা হয়েছে
+    st.caption("The backend engine runs 4 advanced models simultaneously to deliver real-time scanning and instant live benchmarking.")
     
     input_url = st.text_input("Enter URL for Deep AI Analysis:", placeholder="https://secure-login-update.example.com")
     
