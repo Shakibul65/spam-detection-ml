@@ -15,7 +15,7 @@ import time
 # ==========================================
 @st.cache_resource
 def get_db_connection():
-    conn = sqlite3.connect('spam_guard_pro.db', check_same_thread=False)
+    conn = sqlite3.connect('phishing_detector_pro.db', check_same_thread=False)
     c = conn.cursor()
     # এখানে আমরা মডেলের নাম রাখার জন্য 'model_used' কলাম যোগ করতে পারি, অথবা আগের স্ট্রাকচারই ঠিক রাখতে পারি
     c.execute('''CREATE TABLE IF NOT EXISTS scan_logs 
@@ -28,7 +28,7 @@ conn = get_db_connection()
 # ==========================================
 # 2. Page Configuration & UI Styling
 # ==========================================
-st.set_page_config(page_title="SpamGuard Pro | Security Suite", page_icon="🛡️", layout="wide")
+st.set_page_config(page_title="Phishing Detector AI | Security Suite", page_icon="🛡️", layout="wide")
 
 st.markdown("""
     <style>
@@ -82,7 +82,7 @@ cv, models_dict = load_ai_models()
 # 4. Sidebar Navigation
 # ==========================================
 with st.sidebar:
-    st.title("🛡️ SpamGuard Pro")
+    st.title("🛡️ Phishing Detector AI")
     st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=90)
     st.markdown("### Dev: Shakibul Hasan")
     st.caption("Computer Science & Engineering")
@@ -90,7 +90,7 @@ with st.sidebar:
     
     menu = st.radio("Applications", [
         "🏠 Master Dashboard", 
-        "🔍 Spam Detector AI", 
+        "🔍 Phishing Detector AI", 
         "🔗 URL Intelligence", 
         "📁 Batch Processing",
         "🗄️ Database Logs",
@@ -119,9 +119,9 @@ if menu == "🏠 Master Dashboard":
     chart_data = pd.DataFrame(np.random.randint(10, 100, size=(20, 2)), columns=['Phishing', 'Malware'])
     st.line_chart(chart_data)
 
-elif menu == "🔍 Spam Detector AI":
-    st.title("🔍 Multi-Model Spam Analysis Engine")
-    st.caption("কোড ব্যাকএন্ডে একসাথে ৩টি অ্যালগরিদম (Naive Bayes, Logistic Regression, SVM) দিয়ে প্যারালাল অ্যানালাইসিস করবে।")
+elif menu == "🔍 Phishing Detector AI":
+    st.title("🔍 Multi-Model Phishing Analysis Engine")
+    st.caption("কোড ব্যাকএন্ডে একসাথে ৩টি অ্যালগরিদম (Naive Bayes, Logistic Regression, SVM) দিয়ে প্যারালাল অ্যানালাইসিস করবে।")
     
     input_text = st.text_area("Enter content for analysis:", height=150, placeholder="Paste email or SMS here...")
     
@@ -134,7 +134,7 @@ elif menu == "🔍 Spam Detector AI":
                 vect = cv.transform([input_text])
                 
                 results = []
-                # ব্যাকএন্ডে লুপ চালিয়ে ৩টি মডেল থেকেই প্রেডিকশন বের করা হচ্ছে
+                # ব্যাকএন্ডে লুপ চালিয়ে ৩টি মডেল থেকেই প্রেডিকশন বের করা হচ্ছে
                 for algo_name, current_model in models_dict.items():
                     res = current_model.predict(vect)[0]
                     prob = current_model.predict_proba(vect)[0]
@@ -143,10 +143,10 @@ elif menu == "🔍 Spam Detector AI":
                         "Algorithm": algo_name,
                         "Prediction": res.upper(),
                         "Confidence": f"{conf:.2f}%",
-                        "Status": "🚨 SPAM" if res == 'spam' else "✅ CLEAN"
+                        "Status": "🚨 PHISHING / SPAM" if res == 'spam' else "✅ CLEAN"
                     })
                 
-                # ডেটাবেজে লগ রাখার জন্য (মেকানিজম ঠিক রাখতে প্রথম রেজাল্ট বা মেজোরিটি ভোট সেভ করা যায়, এখানে ১ম টি রাখা হলো)
+                # ডেটাবেজে লগ রাখার জন্য (মেকানিজম ঠিক রাখতে প্রথম রেজাল্ট বা মেজোরিটি ভোট সেভ করা যায়, এখানে ১ম টি রাখা হলো)
                 c = conn.cursor()
                 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 # ডেমো হিসেবে ১ম মডেলের ডাটা লগ করা হলো
@@ -169,9 +169,9 @@ elif menu == "🔍 Spam Detector AI":
                         </div>
                         """, unsafe_allow_html=True)
                         
-                        # ইন্ডিভিজুয়াল স্ট্রীমলিট অ্যালার্ট বাটন বা টেক্সট
+                        # ইন্ডিভিজুয়াল স্ট্রীমলিট অ্যালার্ট বাটন বা টেক্সট
                         if r['Prediction'] == 'SPAM':
-                            st.error(f"{r['Algorithm']}: Thread Flagged!")
+                            st.error(f"{r['Algorithm']}: Threat Flagged!")
                         else:
                             st.success(f"{r['Algorithm']}: Clear!")
                             
@@ -244,8 +244,8 @@ elif menu == "📂 Developer API":
     st.code("""
 import requests
 
-def query_spamguard(text):
-    api_endpoint = "https://api.spamguard.pro/v1/scan"
+def query_phishing_detector(text):
+    api_endpoint = "https://api.phishingdetector.ai/v1/scan"
     payload = {"content": text}
     response = requests.post(api_endpoint, json=payload)
     return response.json()
