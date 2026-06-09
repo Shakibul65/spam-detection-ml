@@ -1,11 +1,9 @@
 streamlit
 pandas
-plotly
-scikit-learn
-streamlit
-pandas
 numpy
 plotly
 scikit-learn
 lightgbm
 catboost
+seaborn
+matplotlib
