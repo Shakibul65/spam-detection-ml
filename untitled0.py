@@ -10,7 +10,7 @@ import sqlite3
 from datetime import datetime
 import time
 
-# --- NEWLY ADDED LIBRARIES (Data Analysis & Evaluation Metrics) ---
+# --- ১. আপনার নতুন লাইব্রেরিগুলো এখানে সুন্দরভাবে সেট করা হলো ---
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn import metrics
@@ -59,12 +59,11 @@ st.markdown("""
 # ==========================================
 @st.cache_resource
 def load_url_models():
-    # 🎯 REAL DATASET PIPELINE INTEGRATION
-    # এটি আপনার PhishTank ও Majestic Million থেকে সংগৃহীত আসল .csv ফাইলটি রিড করবে
+    # ডাটাসেট পাইপলাইন: এটি সরাসরি ফোল্ডারের 'phishing_dataset.csv' রিড করবে
     try:
         df = pd.read_csv('phishing_dataset.csv') 
     except FileNotFoundError:
-        # ফাইলটি কম্পিউটারে না থাকলে ব্যাকআপ হিসেবে এই ব্যালেন্সড ডামি ডেটাটি কাজ করবে (Safe Run)
+        # ফাইল মিসিং থাকলে অ্যাপ সচল রাখতে ১:১ ব্যালেন্সড মক ডেটা ব্যাকআপ
         data = {
             'url': [
                 'http://secure-login-facebook-verify.com', 'https://www.google.com', 
@@ -78,11 +77,10 @@ def load_url_models():
         }
         df = pd.DataFrame(data)
     
-    # Feature Engineering: Character-level TF-IDF (n-gram 3,5) as per Section 3.4
+    # Feature Engineering (n-gram 3,5)
     tfidf = TfidfVectorizer(analyzer='char', ngram_range=(3, 5), max_features=150)
     X = tfidf.fit_transform(df['url']).toarray()
     
-    # লেবেল এনকোডিং নিশ্চিত করা
     if df['label'].dtype == 'object':
         y = df['label'].map({'safe': 0, 'phishing': 1})
     else:
@@ -96,7 +94,7 @@ def load_url_models():
     cat_model = CatBoostClassifier(iterations=15, random_state=42, verbose=0)
     cat_model.fit(X, y)
     
-    # Model 3: Deep MLP (Multi-Layer Perceptron)
+    # Model 3: Deep MLP
     mlp_model = MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=250, random_state=42)
     mlp_model.fit(X, y)
     
@@ -157,7 +155,7 @@ if menu == "🏠 Master Dashboard":
 
 elif menu == "🔍 URL Phishing Detector AI":
     st.title("🔍 Multi-Model Phishing URL Analysis Engine")
-    st.caption("The backend engine runs 4 advanced models simultaneously to deliver real-time scanning and instant live benchmarking.")
+    st.caption("The backend engine runs 4 advanced models simultaneously to deliver real-time scanning.")
     
     input_url = st.text_input("Enter URL for Deep AI Analysis:", placeholder="https://secure-login-update.example.com")
     
@@ -167,7 +165,7 @@ elif menu == "🔍 URL Phishing Detector AI":
                 time.sleep(1.2)
                 
                 vect = tfidf.transform([input_url.lower()]).toarray()
-                results = []
+                results_list = []  # ভেরিয়েবলের নাম নিখুঁত করা হলো এরর এড়াতে
                 
                 # Multi-Model Parallel Prediction Execution
                 for algo_name, current_model in models_dict.items():
@@ -177,30 +175,30 @@ elif menu == "🔍 URL Phishing Detector AI":
                     
                     res_text = 'PHISHING' if pred_code == 1 else 'SAFE'
                     
-                    results.append({
+                    results_list.append({
                         "Algorithm": algo_name,
                         "Prediction": res_text,
-                        "Confidence": f"{conf:.2f}%",
+                        "Confidence": conf,
                         "Status": "🚨 PHISHING" if res_text == 'PHISHING' else "✅ CLEAN"
                     })
                 
-                # Log Threat Records to SQLite DB
+                # Log Threat Records to SQLite DB (প্রথম মডেলের প্রেডিকশন নিয়ে লগ করা)
                 c = conn.cursor()
                 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                c.execute('INSERT INTO scan_logs VALUES (?,?,?,?)', (input_url, results[0]["Prediction"].lower(), float(results[0]["Confidence"].replace('%','')), now))
+                c.execute('INSERT INTO scan_logs VALUES (?,?,?,?)', (input_url, results_list[0]["Prediction"].lower(), results_list[0]["Confidence"], now))
                 conn.commit()
                 
                 # 1. Display Hybrid Scan Metrics Card Components
                 st.write("### 📊 Advanced Hybrid AI Scan Results:")
                 cols = st.columns(4)
-                for idx, r in enumerate(results):
+                for idx, r in enumerate(results_list):
                     with cols[idx]:
                         st.markdown(f"""
                         <div class='status-card'>
                             <h4>{r['Algorithm']}</h4>
                             <hr style='margin: 8px 0;'>
                             <p>Result: <b>{r['Status']}</b></p>
-                            <p>Confidence: <b>{r['Confidence']}</b></p>
+                            <p>Confidence: <b>{r['Confidence']:.2f}%</b></p>
                         </div>
                         """, unsafe_allow_html=True)
                         
@@ -218,10 +216,10 @@ elif menu == "🔍 URL Phishing Detector AI":
                     "Model Architecture": ["LightGBM", "CatBoost", "TabNet Engine", "Deep MLP"],
                     "Accuracy Score (%)": [94.20, 96.50, 95.10, 93.80],
                     "Confidence Delivered": [
-                        float(results[0]["Confidence"].replace('%','')),
-                        float(results[1]["Confidence"].replace('%','')),
-                        float(results[2]["Confidence"].replace('%','')),
-                        float(results[3]["Confidence"].replace('%',''))
+                        results_list[0]["Confidence"],
+                        results_list[1]["Confidence"],
+                        results_list[2]["Confidence"],
+                        results_list[3]["Confidence"]
                     ],
                     "Inference Velocity (ms)": [2.1, 4.8, 12.4, 6.2]
                 }
@@ -234,7 +232,8 @@ elif menu == "🔍 URL Phishing Detector AI":
                                       title="Current Scan Confidence Level (%)",
                                       text="Confidence Delivered", color="Model Architecture",
                                       color_discrete_sequence=px.colors.qualitative.Set2)
-                    fig_comp.update_layout(yaxis_range=[0, 110])
+                    fig_comp.update_traces(texttemplate='%{text:.2f}%', textposition='outside')
+                    fig_comp.update_layout(yaxis_range=[0, 115])
                     st.plotly_chart(fig_comp, use_container_width=True)
                     
                 with b_col2:
