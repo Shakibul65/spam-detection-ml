@@ -1,9 +1,8 @@
 streamlit
-pandas
-numpy
-plotly
 scikit-learn
 lightgbm
 catboost
+plotly
+pandas
+numpy
 seaborn
-matplotlib
