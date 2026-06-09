@@ -10,7 +10,7 @@ import sqlite3
 from datetime import datetime
 import time
 
-# --- ১. নতুন অ্যানালাইসিস লাইব্রেরি সমূহ ---
+# --- অ্যানালাইসিস লাইব্রেরি ---
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn import metrics
@@ -59,11 +59,10 @@ st.markdown("""
 # ==========================================
 @st.cache_resource
 def load_url_models():
-    # PhishTank ও Majestic Million এর আসল ডাটাসেট লোড করার পাইপলাইন
+    # ডাটাসেট লোড পাইপলাইন
     try:
         df = pd.read_csv('phishing_dataset.csv') 
     except FileNotFoundError:
-        # ফাইল না থাকলে সেফটি হিসেবে ১:১ ব্যালেন্সড মক ডেটা লোড হবে
         data = {
             'url': [
                 'http://secure-login-facebook-verify.com', 'https://www.google.com', 
@@ -86,20 +85,17 @@ def load_url_models():
     else:
         y = df['label']
         
-    # Model 1: LightGBM Ensembles
-    lgb_model = LGBMClassifier(n_estimators=15, random_state=42, verbose=-1)
+    # দ্রুত ট্রেইনিং নিশ্চিত করতে এস্টিমেটর সংখ্যা সীমিত করা হলো যেন হ্যাং না করে
+    lgb_model = LGBMClassifier(n_estimators=10, random_state=42, verbose=-1, n_jobs=1)
     lgb_model.fit(X, y)
     
-    # Model 2: CatBoost Classifier
-    cat_model = CatBoostClassifier(iterations=15, random_state=42, verbose=0)
+    cat_model = CatBoostClassifier(iterations=10, random_state=42, verbose=0, thread_count=1)
     cat_model.fit(X, y)
     
-    # Model 3: Deep MLP
-    mlp_model = MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=250, random_state=42)
+    mlp_model = MLPClassifier(hidden_layer_sizes=(32, 16), max_iter=150, random_state=42)
     mlp_model.fit(X, y)
     
-    # Model 4: TabNet Simulated Engine
-    tabnet_model = MLPClassifier(hidden_layer_sizes=(128, 64), activation='relu', solver='adam', random_state=42)
+    tabnet_model = MLPClassifier(hidden_layer_sizes=(64, 32), activation='relu', solver='adam', random_state=42)
     tabnet_model.fit(X, y)
     
     models = {
@@ -162,12 +158,12 @@ elif menu == "🔍 URL Phishing Detector AI":
     if st.button("Start AI Scan 🚀"):
         if input_url:
             with st.spinner('Running advanced URL string & heuristic cross-verification...'):
-                time.sleep(1.2)
+                time.sleep(1.0)
                 
                 vect = tfidf.transform([input_url.lower()]).toarray()
                 
-                # ভেরিয়েবলের নাম একদম সুনির্দিষ্ট করা হলো এরর কাটানোর জন্য
-                final_results = []
+                # ভেরিয়েবলের নাম একদম সুনির্দিষ্ট (Fixed)
+                final_output_results = []
                 
                 # Multi-Model Prediction Loop
                 for algo_name, current_model in models_dict.items():
@@ -177,23 +173,23 @@ elif menu == "🔍 URL Phishing Detector AI":
                     
                     res_text = 'PHISHING' if pred_code == 1 else 'SAFE'
                     
-                    final_results.append({
+                    final_output_results.append({
                         "Algorithm": algo_name,
                         "Prediction": res_text,
                         "Confidence": conf,
                         "Status": "🚨 PHISHING" if res_text == 'PHISHING' else "✅ CLEAN"
                     })
                 
-                # SQLite ডেটাবেজে প্রথম মডেলের হিস্টোরি সেভ করা
+                # SQLite ডেটাবেজে লগ করা
                 c = conn.cursor()
                 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                c.execute('INSERT INTO scan_logs VALUES (?,?,?,?)', (input_url, final_results[0]["Prediction"].lower(), final_results[0]["Confidence"], now))
+                c.execute('INSERT INTO scan_logs VALUES (?,?,?,?)', (input_url, final_output_results[0]["Prediction"].lower(), final_output_results[0]["Confidence"], now))
                 conn.commit()
                 
-                # 1. কার্ড ডিসপ্লে সেকশন
+                # 1. কার্ড ডিসপ্লে
                 st.write("### 📊 Advanced Hybrid AI Scan Results:")
                 cols = st.columns(4)
-                for idx, r in enumerate(final_results):
+                for idx, r in enumerate(final_output_results):
                     with cols[idx]:
                         st.markdown(f"""
                         <div class='status-card'>
@@ -211,17 +207,17 @@ elif menu == "🔍 URL Phishing Detector AI":
                 
                 st.write("---")
                 
-                # 2. চার্ট এবং টেবিল বেঞ্চমার্কিং সেকশন
+                # 2. চার্ট এবং টেবিল বেঞ্চমার্কিং
                 st.subheader("📊 Live Algorithm Performance Benchmarking")
                 
                 benchmark_data = {
                     "Model Architecture": ["LightGBM", "CatBoost", "TabNet Engine", "Deep MLP"],
                     "Accuracy Score (%)": [94.20, 96.50, 95.10, 93.80],
                     "Confidence Delivered": [
-                        final_results[0]["Confidence"],
-                        final_results[1]["Confidence"],
-                        final_results[2]["Confidence"],
-                        final_results[3]["Confidence"]
+                        final_output_results[0]["Confidence"],
+                        final_output_results[1]["Confidence"],
+                        final_output_results[2]["Confidence"],
+                        final_output_results[3]["Confidence"]
                     ],
                     "Inference Velocity (ms)": [2.1, 4.8, 12.4, 6.2]
                 }
@@ -245,7 +241,7 @@ elif menu == "🔍 URL Phishing Detector AI":
                     fig_speed.update_traces(line_color='#0072ff', line_width=3, marker_size=10)
                     st.plotly_chart(fig_speed, use_container_width=True)
                 
-                # স্কাইকিট-লার্ন কনসেপ্ট স্টাইলিং টেবিল
+                # বেঞ্চমার্ক টেবিল
                 st.dataframe(df_bench.style.highlight_max(axis=0, color='#d4edda', subset=["Accuracy Score (%)", "Confidence Delivered"])
                                               .highlight_min(axis=0, color='#f8d7da', subset=["Inference Velocity (ms)"]), 
                              use_container_width=True)
