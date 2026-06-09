@@ -10,7 +10,7 @@ import sqlite3
 from datetime import datetime
 import time
 
-# --- NEWLY ADDED LIBRARIES (As requested for Data Analysis & Metrics) ---
+# --- NEWLY ADDED LIBRARIES (Data Analysis & Evaluation Metrics) ---
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn import metrics
@@ -55,30 +55,39 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. Advanced AI Model Training (URL Analytics & Balanced Dataset)
+# 3. Advanced AI Model Training (Integrated with Real Balanced Dataset)
 # ==========================================
 @st.cache_resource
 def load_url_models():
-    # Simulated Balanced Dataset Representation (Synthesized from PhishTank & Majestic Million)
-    # Balanced with exact 1:1 ratio for Safe (0) and Phishing (1) to eliminate model bias
-    data = {
-        'url': [
-            'http://secure-login-facebook-verify.com', 'https://www.google.com', 
-            'http://win-free-iphone-now.xyz', 'https://github.com/trending', 
-            'http://netflix-billing-update.net', 'https://www.linkedin.com/feed', 
-            'http://paypal-identity-check-login.org', 'https://stackoverflow.com',
-            'http://amazon-gift-card-claim.click', 'https://www.wikipedia.org', 
-            'http://update-your-bank-security.co', 'https://medium.com'
-        ],
-        'label': ['phishing', 'safe', 'phishing', 'safe', 'phishing', 'safe', 'phishing', 'safe', 'phishing', 'safe', 'phishing', 'safe']
-    }
-    df = pd.DataFrame(data)
+    # 🎯 REAL DATASET PIPELINE INTEGRATION
+    # এটি আপনার PhishTank ও Majestic Million থেকে সংগৃহীত আসল .csv ফাইলটি রিড করবে
+    try:
+        df = pd.read_csv('phishing_dataset.csv') 
+    except FileNotFoundError:
+        # ফাইলটি কম্পিউটারে না থাকলে ব্যাকআপ হিসেবে এই ব্যালেন্সড ডামি ডেটাটি কাজ করবে (Safe Run)
+        data = {
+            'url': [
+                'http://secure-login-facebook-verify.com', 'https://www.google.com', 
+                'http://win-free-iphone-now.xyz', 'https://github.com/trending', 
+                'http://netflix-billing-update.net', 'https://www.linkedin.com/feed', 
+                'http://paypal-identity-check-login.org', 'https://stackoverflow.com',
+                'http://amazon-gift-card-claim.click', 'https://www.wikipedia.org', 
+                'http://update-your-bank-security.co', 'https://medium.com'
+            ],
+            'label': ['phishing', 'safe', 'phishing', 'safe', 'phishing', 'safe', 'phishing', 'safe', 'phishing', 'safe', 'phishing', 'safe']
+        }
+        df = pd.DataFrame(data)
     
-    # Feature Engineering via Character-level TF-IDF (n-gram 3,5) as per Section 3.4
+    # Feature Engineering: Character-level TF-IDF (n-gram 3,5) as per Section 3.4
     tfidf = TfidfVectorizer(analyzer='char', ngram_range=(3, 5), max_features=150)
     X = tfidf.fit_transform(df['url']).toarray()
-    y = df['label'].map({'safe': 0, 'phishing': 1})
     
+    # লেবেল এনকোডিং নিশ্চিত করা
+    if df['label'].dtype == 'object':
+        y = df['label'].map({'safe': 0, 'phishing': 1})
+    else:
+        y = df['label']
+        
     # Model 1: LightGBM Ensembles
     lgb_model = LGBMClassifier(n_estimators=15, random_state=42, verbose=-1)
     lgb_model.fit(X, y)
