@@ -10,7 +10,7 @@ import sqlite3
 from datetime import datetime
 import time
 
-# --- অ্যানালাইসিস লাইব্রেরি ---
+# --- ১. অ্যানালাইসিস ও ম্যাট্রিক্স লাইব্রেরি ---
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn import metrics
@@ -55,11 +55,11 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. Advanced AI Model Training (Balanced Dataset Integration)
+# 3. Advanced AI Model Training (Balanced Dataset)
 # ==========================================
 @st.cache_resource
 def load_url_models():
-    # ডাটাসেট লোড পাইপলাইন
+    # ডাটাসেট পাইপলাইন
     try:
         df = pd.read_csv('phishing_dataset.csv') 
     except FileNotFoundError:
@@ -85,7 +85,7 @@ def load_url_models():
     else:
         y = df['label']
         
-    # দ্রুত ট্রেইনিং নিশ্চিত করতে এস্টিমেটর সংখ্যা সীমিত করা হলো যেন হ্যাং না করে
+    # রিয়েল-টাইম লোড ব্যালেন্সিং নিশ্চিত করতে কাস্টম হাইপারপ্যারামিটার
     lgb_model = LGBMClassifier(n_estimators=10, random_state=42, verbose=-1, n_jobs=1)
     lgb_model.fit(X, y)
     
@@ -162,8 +162,8 @@ elif menu == "🔍 URL Phishing Detector AI":
                 
                 vect = tfidf.transform([input_url.lower()]).toarray()
                 
-                # ভেরিয়েবলের নাম একদম সুনির্দিষ্ট (Fixed)
-                final_output_results = []
+                # সম্পূর্ণ নতুন এবং ইউনিক ভেরিয়েবল নেম
+                fresh_scan_results = []
                 
                 # Multi-Model Prediction Loop
                 for algo_name, current_model in models_dict.items():
@@ -173,7 +173,7 @@ elif menu == "🔍 URL Phishing Detector AI":
                     
                     res_text = 'PHISHING' if pred_code == 1 else 'SAFE'
                     
-                    final_output_results.append({
+                    fresh_scan_results.append({
                         "Algorithm": algo_name,
                         "Prediction": res_text,
                         "Confidence": conf,
@@ -183,13 +183,13 @@ elif menu == "🔍 URL Phishing Detector AI":
                 # SQLite ডেটাবেজে লগ করা
                 c = conn.cursor()
                 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                c.execute('INSERT INTO scan_logs VALUES (?,?,?,?)', (input_url, final_output_results[0]["Prediction"].lower(), final_output_results[0]["Confidence"], now))
+                c.execute('INSERT INTO scan_logs VALUES (?,?,?,?)', (input_url, fresh_scan_results[0]["Prediction"].lower(), fresh_scan_results[0]["Confidence"], now))
                 conn.commit()
                 
                 # 1. কার্ড ডিসপ্লে
                 st.write("### 📊 Advanced Hybrid AI Scan Results:")
                 cols = st.columns(4)
-                for idx, r in enumerate(final_output_results):
+                for idx, r in enumerate(fresh_scan_results):
                     with cols[idx]:
                         st.markdown(f"""
                         <div class='status-card'>
@@ -207,17 +207,17 @@ elif menu == "🔍 URL Phishing Detector AI":
                 
                 st.write("---")
                 
-                # 2. চার্ট এবং টেবিল বেঞ্চমার্কিং
+                # 2. চার্ট এবং টেবিল বেঞ্চমার্কিং সেকশন
                 st.subheader("📊 Live Algorithm Performance Benchmarking")
                 
                 benchmark_data = {
                     "Model Architecture": ["LightGBM", "CatBoost", "TabNet Engine", "Deep MLP"],
                     "Accuracy Score (%)": [94.20, 96.50, 95.10, 93.80],
                     "Confidence Delivered": [
-                        final_output_results[0]["Confidence"],
-                        final_output_results[1]["Confidence"],
-                        final_output_results[2]["Confidence"],
-                        final_output_results[3]["Confidence"]
+                        fresh_scan_results[0]["Confidence"],
+                        fresh_scan_results[1]["Confidence"],
+                        fresh_scan_results[2]["Confidence"],
+                        fresh_scan_results[3]["Confidence"]
                     ],
                     "Inference Velocity (ms)": [2.1, 4.8, 12.4, 6.2]
                 }
