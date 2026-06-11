@@ -52,37 +52,59 @@ st.markdown("""
 # ==========================================
 @st.cache_resource
 def load_url_models():
+    # মডেলের সঠিক লার্নিংয়ের জন্য একটি বড় ও বৈচিত্র্যময় ডেটাসেট তৈরি করা হয়েছে
     data = {
         'url': [
-            'http://secure-login-facebook-verify.com', 'https://www.google.com', 
-            'http://win-free-iphone-now.xyz', 'https://github.com/trending', 
-            'http://netflix-billing-update.net', 'https://www.linkedin.com/feed', 
-            'http://paypal-identity-check-login.org', 'https://stackoverflow.com',
-            'http://amazon-gift-card-claim.click', 'https://www.wikipedia.org', 
-            'http://update-your-bank-security.co', 'https://medium.com'
+            # Phishing URLs
+            'http://secure-login-facebook-verify.com', 'http://win-free-iphone-now.xyz', 
+            'http://netflix-billing-update.net', 'http://paypal-identity-check-login.org', 
+            'http://amazon-gift-card-claim.click', 'http://update-your-bank-security.co',
+            'http://verify-paypal-accounts.com', 'http://free-pubg-uc-claim.net',
+            'http://facebook-login-secure.xyz', 'http://instagram-security-update.co',
+            'http://bfa-netbanking-alert.com', 'http://appleid-verification-icloud.xyz',
+            'http://whatsapp-gift-monies.club', 'http://secure-login-verify.com',
+            'http://drive-google-com-shared-file.info', 'http://microsoft-office365-update.net',
+            
+            # Safe URLs
+            'https://www.google.com', 'https://github.com/trending', 
+            'https://www.linkedin.com/feed', 'https://stackoverflow.com',
+            'https://www.wikipedia.org', 'https://medium.com',
+            'https://www.youtube.com', 'https://www.microsoft.com',
+            'https://aws.amazon.com', 'https://www.facebook.com',
+            'https://www.instagram.com', 'https://www.netflix.com',
+            'https://www.paypal.com', 'https://www.amazon.com',
+            'https://www.apple.com', 'https://www.whatsapp.com'
         ],
-        'label': ['phishing', 'safe', 'phishing', 'safe', 'phishing', 'safe', 'phishing', 'safe', 'phishing', 'safe', 'phishing', 'safe']
+        'label': [
+            'phishing', 'phishing', 'phishing', 'phishing', 'phishing', 'phishing',
+            'phishing', 'phishing', 'phishing', 'phishing', 'phishing', 'phishing',
+            'phishing', 'phishing', 'phishing', 'phishing',
+            
+            'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe',
+            'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe'
+        ]
     }
     df = pd.DataFrame(data)
     
-    tfidf = TfidfVectorizer(analyzer='char', ngram_range=(3, 5), max_features=150)
+    # ক্যারেক্টার লেভেল অ্যানালাইসিসের জন্য সুনির্দিষ্ট ngram_range সেট করা হয়েছে
+    tfidf = TfidfVectorizer(analyzer='char', ngram_range=(2, 4))
     X = tfidf.fit_transform(df['url']).toarray()
     y = df['label'].map({'safe': 0, 'phishing': 1})
     
-    # LightGBM
-    lgb_model = LGBMClassifier(n_estimators=15, random_state=42, verbose=-1)
+    # LightGBM Classifier
+    lgb_model = LGBMClassifier(n_estimators=30, random_state=42, verbose=-1)
     lgb_model.fit(X, y)
     
-    # CatBoost
-    cat_model = CatBoostClassifier(iterations=15, random_state=42, verbose=0)
+    # CatBoost Classifier
+    cat_model = CatBoostClassifier(iterations=30, random_state=42, verbose=0)
     cat_model.fit(X, y)
     
-    # Deep MLP
-    mlp_model = MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=250, random_state=42)
+    # Deep MLP Classifier (পর্যাপ্ত ইন্টারেশন দেওয়া হয়েছে কনভার্জ হওয়ার জন্য)
+    mlp_model = MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=700, random_state=42)
     mlp_model.fit(X, y)
     
     # TabNet Simulated Engine
-    tabnet_model = MLPClassifier(hidden_layer_sizes=(128, 64), activation='relu', solver='adam', random_state=42)
+    tabnet_model = MLPClassifier(hidden_layer_sizes=(128, 64), activation='relu', solver='adam', max_iter=700, random_state=42)
     tabnet_model.fit(X, y)
     
     models = {
@@ -138,8 +160,6 @@ if menu == "🏠 Master Dashboard":
 
 elif menu == "🔍 URL Phishing Detector AI":
     st.title("🔍 Multi-Model Phishing URL Analysis Engine")
-    
-    # ক্যাপশন বা সাবটাইটেলটি এখানে সম্পূর্ণ প্রফেশনাল ইংরেজিতে পরিবর্তন করা হয়েছে
     st.caption("The backend engine runs 4 advanced models simultaneously to deliver real-time scanning and instant live benchmarking.")
     
     input_url = st.text_input("Enter URL for Deep AI Analysis:", placeholder="https://secure-login-update.example.com")
@@ -152,7 +172,7 @@ elif menu == "🔍 URL Phishing Detector AI":
                 vect = tfidf.transform([input_url.lower()]).toarray()
                 results = []
                 
-                # ৪টি মডেল দিয়ে সমান্তরাল প্রেডিকশন
+                # ৪টি মডেল দিয়ে সমান্তরাল প্রেডিকশন ও কনফিডেন্স ক্যালকুলেশন
                 for algo_name, current_model in models_dict.items():
                     pred_code = current_model.predict(vect)[0]
                     prob = current_model.predict_proba(vect)[0]
@@ -167,13 +187,13 @@ elif menu == "🔍 URL Phishing Detector AI":
                         "Status": "🚨 PHISHING" if res_text == 'PHISHING' else "✅ CLEAN"
                     })
                 
-                # ডাটাবেজে সেভ
+                # ডাটাবেজে রেকর্ড সেভ করার লজিক (প্রথম মডেলের সিদ্ধান্তকে বেস ধরে)
                 c = conn.cursor()
                 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 c.execute('INSERT INTO scan_logs VALUES (?,?,?,?)', (input_url, results[0]["Prediction"].lower(), float(results[0]["Confidence"].replace('%','')), now))
                 conn.commit()
                 
-                # ১. ৪টি মডেলের লাইভ স্ক্যান রেজাল্ট (হুবহু স্ক্রিনশটের মতো)
+                # ১. ৪টি মডেলের লাইভ স্ক্যান রেজাল্ট কার্ড ভিউ
                 st.write("### 📊 Advanced Hybrid AI Scan Results:")
                 cols = st.columns(4)
                 for idx, r in enumerate(results):
@@ -194,7 +214,7 @@ elif menu == "🔍 URL Phishing Detector AI":
                 
                 st.write("---")
                 
-                # ২. অটোমেটিক লাইভ মডেল বেঞ্চমার্কিং সেকশন (স্ক্যানের ঠিক নিচে চলে আসবে)
+                # ২. অটোমেটিক লাইভ মডেল বেঞ্চমার্কিং সেকশন
                 st.subheader("📊 Live Algorithm Performance Benchmarking")
                 
                 benchmark_data = {
@@ -210,11 +230,9 @@ elif menu == "🔍 URL Phishing Detector AI":
                 }
                 df_bench = pd.DataFrame(benchmark_data)
                 
-                # দুই কলামে গ্রাফ ও টেবিল ডাটা ভিউ
                 b_col1, b_col2 = st.columns([3, 2])
                 
                 with b_col1:
-                    # চার্ট ১: এই স্ক্যানের কনফিডেন্স লেভেল বনাম মডেল এক্যুরেসির তুলনা
                     fig_comp = px.bar(df_bench, x="Model Architecture", y="Confidence Delivered",
                                       title="Current Scan Confidence Level (%)",
                                       text="Confidence Delivered", color="Model Architecture",
@@ -223,16 +241,14 @@ elif menu == "🔍 URL Phishing Detector AI":
                     st.plotly_chart(fig_comp, use_container_width=True)
                     
                 with b_col2:
-                    # চার্ট ২: ইনফারেন্স স্পিড তুলনা (মিলিসেকেন্ডে)
                     fig_speed = px.line(df_bench, x="Model Architecture", y="Inference Velocity (ms)", 
                                         title="Execution Speed / Latency (Lower is Better)", 
                                         markers=True, line_shape="spline")
                     fig_speed.update_traces(line_color='#0072ff', line_width=3, marker_size=10)
                     st.plotly_chart(fig_speed, use_container_width=True)
                 
-                # হাইলাইটেড বেঞ্চমার্কিং ডেটা টেবিল
                 st.dataframe(df_bench.style.highlight_max(axis=0, color='#d4edda', subset=["Accuracy Score (%)", "Confidence Delivered"])
-                                      .highlight_min(axis=0, color='#f8d7da', subset=["Inference Velocity (ms)"]), 
+                                           .highlight_min(axis=0, color='#f8d7da', subset=["Inference Velocity (ms)"]), 
                              use_container_width=True)
                              
         else:
