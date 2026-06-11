@@ -10,9 +10,6 @@ import sqlite3
 from datetime import datetime
 import time
 
-# ==========================================
-# 1. Database Implementation
-# ==========================================
 @st.cache_resource
 def get_db_connection():
     conn = sqlite3.connect('phishing_url_detector.db', check_same_thread=False)
@@ -24,9 +21,6 @@ def get_db_connection():
 
 conn = get_db_connection()
 
-# ==========================================
-# 2. Page Configuration & UI Styling
-# ==========================================
 st.set_page_config(page_title="Phishing URL Detector AI | Advanced Security", page_icon="🛡️", layout="wide")
 
 st.markdown("""
@@ -47,15 +41,10 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# ==========================================
-# 3. Advanced AI Model Training (URL Analytics)
-# ==========================================
 @st.cache_resource
 def load_url_models():
-    # মডেলের সঠিক লার্নিংয়ের জন্য একটি বড় ও বৈচিত্র্যময় ডেটাসেট তৈরি করা হয়েছে
     data = {
         'url': [
-            # Phishing URLs
             'http://secure-login-facebook-verify.com', 'http://win-free-iphone-now.xyz', 
             'http://netflix-billing-update.net', 'http://paypal-identity-check-login.org', 
             'http://amazon-gift-card-claim.click', 'http://update-your-bank-security.co',
@@ -65,7 +54,6 @@ def load_url_models():
             'http://whatsapp-gift-monies.club', 'http://secure-login-verify.com',
             'http://drive-google-com-shared-file.info', 'http://microsoft-office365-update.net',
             
-            # Safe URLs
             'https://www.google.com', 'https://github.com/trending', 
             'https://www.linkedin.com/feed', 'https://stackoverflow.com',
             'https://www.wikipedia.org', 'https://medium.com',
@@ -86,24 +74,19 @@ def load_url_models():
     }
     df = pd.DataFrame(data)
     
-    # ক্যারেক্টার লেভেল অ্যানালাইসিসের জন্য সুনির্দিষ্ট ngram_range সেট করা হয়েছে
     tfidf = TfidfVectorizer(analyzer='char', ngram_range=(2, 4))
     X = tfidf.fit_transform(df['url']).toarray()
     y = df['label'].map({'safe': 0, 'phishing': 1})
     
-    # LightGBM Classifier
     lgb_model = LGBMClassifier(n_estimators=30, random_state=42, verbose=-1)
     lgb_model.fit(X, y)
     
-    # CatBoost Classifier
     cat_model = CatBoostClassifier(iterations=30, random_state=42, verbose=0)
     cat_model.fit(X, y)
     
-    # Deep MLP Classifier (পর্যাপ্ত ইন্টারেশন দেওয়া হয়েছে কনভার্জ হওয়ার জন্য)
     mlp_model = MLPClassifier(hidden_layer_sizes=(64, 32), max_iter=700, random_state=42)
     mlp_model.fit(X, y)
     
-    # TabNet Simulated Engine
     tabnet_model = MLPClassifier(hidden_layer_sizes=(128, 64), activation='relu', solver='adam', max_iter=700, random_state=42)
     tabnet_model.fit(X, y)
     
@@ -118,9 +101,6 @@ def load_url_models():
 
 tfidf, models_dict = load_url_models()
 
-# ==========================================
-# 4. Sidebar Navigation
-# ==========================================
 with st.sidebar:
     st.title("🛡️ Phishing URL Detector")
     st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=90)
@@ -138,10 +118,6 @@ with st.sidebar:
     ])
     st.write("---")
     st.success("System Status: Online")
-
-# ==========================================
-# 5. Main Application Logic
-# ==========================================
 
 if menu == "🏠 Master Dashboard":
     st.title("🚀 Enterprise URL Security Dashboard")
@@ -172,7 +148,6 @@ elif menu == "🔍 URL Phishing Detector AI":
                 vect = tfidf.transform([input_url.lower()]).toarray()
                 results = []
                 
-                # ৪টি মডেল দিয়ে সমান্তরাল প্রেডিকশন ও কনফিডেন্স ক্যালকুলেশন
                 for algo_name, current_model in models_dict.items():
                     pred_code = current_model.predict(vect)[0]
                     prob = current_model.predict_proba(vect)[0]
@@ -187,13 +162,11 @@ elif menu == "🔍 URL Phishing Detector AI":
                         "Status": "🚨 PHISHING" if res_text == 'PHISHING' else "✅ CLEAN"
                     })
                 
-                # ডাটাবেজে রেকর্ড সেভ করার লজিক (প্রথম মডেলের সিদ্ধান্তকে বেস ধরে)
                 c = conn.cursor()
                 now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 c.execute('INSERT INTO scan_logs VALUES (?,?,?,?)', (input_url, results[0]["Prediction"].lower(), float(results[0]["Confidence"].replace('%','')), now))
                 conn.commit()
                 
-                # ১. ৪টি মডেলের লাইভ স্ক্যান রেজাল্ট কার্ড ভিউ
                 st.write("### 📊 Advanced Hybrid AI Scan Results:")
                 cols = st.columns(4)
                 for idx, r in enumerate(results):
@@ -214,7 +187,6 @@ elif menu == "🔍 URL Phishing Detector AI":
                 
                 st.write("---")
                 
-                # ২. অটোমেটিক লাইভ মডেল বেঞ্চমার্কিং সেকশন
                 st.subheader("📊 Live Algorithm Performance Benchmarking")
                 
                 benchmark_data = {
@@ -313,7 +285,4 @@ def query_url_detector(url_string):
     return response.json()
     """, language="python")
 
-# ==========================================
-# 6. Footer
-# ==========================================
 st.markdown(f"<div class='footer'>Developed by **Shakibul Hasan** | CSE Student | {datetime.now().year}</div>", unsafe_allow_html=True)
