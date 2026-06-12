@@ -1,4 +1,6 @@
 streamlit
-pandas
-plotly
+lightgbm
 scikit-learn
+xgboost
+pandas
+numpy
