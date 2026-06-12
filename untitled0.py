@@ -125,8 +125,7 @@ st.markdown("""
     }
     .sidebar-cyber-title {
         font-family: 'Courier New', monospace;
-        color: #00c6ff;
-        text-shadow: 0 0 8px rgba(0, 198, 255, 0.6);
+        color: #ffffff;
         font-weight: bold;
         font-size: 1.5rem;
         margin-top: 10px;
@@ -135,8 +134,7 @@ st.markdown("""
     }
     .sidebar-cyber-dev {
         font-family: 'Courier New', monospace;
-        color: #00c6ff;
-        text-shadow: 0 0 5px rgba(0, 198, 255, 0.4);
+        color: #ffffff;
         font-weight: bold;
         font-size: 1.1rem;
         margin-top: 15px;
@@ -144,10 +142,9 @@ st.markdown("""
     }
     .sidebar-cyber-dept {
         font-family: 'Courier New', monospace;
-        color: #00c6ff;
-        text-shadow: 0 0 4px rgba(0, 198, 255, 0.3);
+        color: #ffffff;
         font-size: 0.9rem;
-        opacity: 0.85;
+        opacity: 0.9;
     }
     </style>
     """, unsafe_allow_html=True)
