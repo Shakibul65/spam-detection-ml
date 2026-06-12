@@ -11,15 +11,12 @@ from datetime import datetime
 import time
 import hashlib
 
-# --- DATABASE SETUP (Fixed with v2 to avoid schema conflict) ---
 @st.cache_resource
 def get_db_connection():
     conn = sqlite3.connect('phishing_url_detector_v2.db', check_same_thread=False)
     c = conn.cursor()
-    # স্ক্যান লগ টেবিল (৫টি কলাম নিশ্চিত করা হয়েছে)
     c.execute('''CREATE TABLE IF NOT EXISTS scan_logs 
                  (url TEXT, prediction TEXT, confidence REAL, timestamp TEXT, username TEXT)''')
-    # ইউজার অ্যাকাউন্ট টেবিল
     c.execute('''CREATE TABLE IF NOT EXISTS users 
                  (username TEXT UNIQUE, password TEXT, signup_date TEXT)''')
     conn.commit()
@@ -27,7 +24,6 @@ def get_db_connection():
 
 conn = get_db_connection()
 
-# --- HELPER FUNCTIONS FOR AUTH ---
 def make_hashes(password):
     return hashlib.sha256(str.encode(password)).hexdigest()
 
@@ -54,25 +50,18 @@ def login_user(username, password):
         return check_hashes(password, data[0])
     return False
 
-# --- PAGE CONFIG ---
 st.set_page_config(page_title="Phishing URL Detector AI | Advanced Security", page_icon="🛡️", layout="wide")
 
-# --- ADVANCED CYBERPUNK/DARK DESIGN CSS ---
 st.markdown("""
     <style>
-    /* Global Background Override */
     .stApp {
         background: radial-gradient(circle at 50% 50%, #101622 0%, #080b11 100%) !important;
         color: #e2e8f0 !important;
     }
-    
-    /* Sidebar Styling */
     [data-testid="stSidebar"] {
         background-color: #0b0f19 !important;
         border-right: 1px solid #1e293b;
     }
-    
-    /* Cyber Glass Card for Auth */
     .auth-container {
         background: rgba(15, 23, 42, 0.6);
         backdrop-filter: blur(12px);
@@ -84,8 +73,6 @@ st.markdown("""
         margin-top: 20px;
         max-width: 750px;
     }
-    
-    /* Neon Text Headings */
     .cyber-title {
         font-family: 'Courier New', monospace;
         color: #00c6ff;
@@ -94,14 +81,11 @@ st.markdown("""
         font-size: 2.2rem;
         margin-bottom: 5px;
     }
-    
     .cyber-subtitle {
         color: #64748b;
         font-size: 1rem;
         margin-bottom: 25px;
     }
-    
-    /* Custom Status Cards for Dashboard Scan Results */
     .status-card { 
         background: #0f172a; 
         padding: 20px; 
@@ -114,8 +98,6 @@ st.markdown("""
         border-bottom: 1px solid #1e293b;
         color: white;
     }
-    
-    /* Glowing Action Buttons */
     .stButton>button { 
         width: 100%; 
         border-radius: 8px; 
@@ -131,13 +113,10 @@ st.markdown("""
         transform: translateY(-2px);
         box-shadow: 0 0 25px rgba(0, 198, 255, 0.7);
     }
-    
-    /* Style Label/Text Inputs slightly cleaner for dark theme */
     label p {
         color: #94a3b8 !important;
         font-weight: 600;
     }
-    
     .footer { 
         text-align: center; 
         color: #475569; 
@@ -147,7 +126,6 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-# --- MODEL TRAINING ---
 @st.cache_resource
 def load_url_models():
     data = {
@@ -208,13 +186,11 @@ def load_url_models():
 
 tfidf, models_dict = load_url_models()
 
-# --- LOGIN / SESSION STATE MANAGEMENT ---
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
 if 'username' not in st.session_state:
     st.session_state['username'] = ""
 
-# --- SIDEBAR OVERALL BRANDING ---
 with st.sidebar:
     st.title("🛡️ URL Protection Panel")
     st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=90)
@@ -222,9 +198,7 @@ with st.sidebar:
     st.caption("Computer Science & Engineering")
     st.write("---")
 
-# --- AUTH PAGE SCREEN ---
 if not st.session_state['logged_in']:
-    
     st.markdown("""
         <div class="auth-container">
             <div class="cyber-title">🔑 Access Control & Identity Portal</div>
@@ -237,12 +211,10 @@ if not st.session_state['logged_in']:
     with col_a:
         auth_mode = st.tabs(["🔒 Sign In / Login", "📝 Create Account / Register"])
         
-        # TAB 1: LOGIN
         with auth_mode[0]:
             st.markdown("<br>", unsafe_allow_html=True)
             username = st.text_input("Enter System Username", placeholder="shakib65", key="login_user")
             password = st.text_input("Enter Security Password", type='password', key="login_pass")
-            
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("Verify Identity & Access Dashboard 🔓"):
                 result = login_user(username, password)
@@ -255,13 +227,11 @@ if not st.session_state['logged_in']:
                 else:
                     st.error("Authentication Failed: Invalid credentials.")
                     
-        # TAB 2: REGISTER
         with auth_mode[1]:
             st.markdown("<br>", unsafe_allow_html=True)
             new_user = st.text_input("Set Unique Username", placeholder="e.g., shakib65", key="reg_user")
             new_password = st.text_input("Set Master Password", type='password', key="reg_pass")
             confirm_password = st.text_input("Confirm Master Password", type='password', key="reg_pass_conf")
-            
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("Generate Secure Identity Credentials 🛠️"):
                 if new_user and new_password:
@@ -277,7 +247,6 @@ if not st.session_state['logged_in']:
                     st.warning("Input required fields.")
 
 else:
-    # --- LOGGED IN APPLICATION ---
     with st.sidebar:
         st.markdown(f"**Authorized User:** `🟢 {st.session_state['username']}`")
         menu = st.radio("Applications", [
@@ -295,7 +264,6 @@ else:
             st.rerun()
         st.success("Core Status: Active")
 
-    # 1. Dashboard View
     if menu == "🏠 Master Dashboard":
         st.title("🚀 Enterprise URL Security Dashboard")
         st.image("https://img.freepik.com/free-vector/cyber-security-concept_23-2148532223.jpg", use_container_width=True)
@@ -311,7 +279,6 @@ else:
         chart_data = pd.DataFrame(np.random.randint(10, 100, size=(20, 2)), columns=['Malicious Links', 'Domain Spoofing'])
         st.line_chart(chart_data)
 
-    # 2. Scanning View (Fixed Database Query Insert Logic)
     elif menu == "🔍 URL Phishing Detector AI":
         st.title("🔍 Multi-Model Phishing URL Analysis Engine")
         st.caption("The backend engine runs 4 advanced models simultaneously to deliver real-time scanning and instant live benchmarking.")
@@ -340,7 +307,6 @@ else:
                             "Status": "🚨 PHISHING" if res_text == 'PHISHING' else "✅ CLEAN"
                         })
                     
-                    # ডাটাবেসে সেভ করা হচ্ছে (৫টি প্যারামিটার সঠিকভাবে ম্যাচ করা হয়েছে)
                     c = conn.cursor()
                     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     c.execute('INSERT INTO scan_logs VALUES (?,?,?,?,?)', 
@@ -404,7 +370,6 @@ else:
             else:
                 st.warning("Please enter a URL first.")
 
-    # 3. Batch View
     elif menu == "📁 Batch Processing":
         st.title("📁 Bulk URL Processing")
         st.write("Upload a CSV file containing a 'url' column for mass analysis.")
@@ -415,7 +380,6 @@ else:
             if st.button("Analyze Batch URLs"):
                 st.info("Processing bulk link database...")
 
-    # 4. Database Log View
     elif menu == "🗄️ Database Logs":
         st.title("🗄️ URL Scan History")
         st.write(f"Displaying logs directly from SQLite database for `{st.session_state['username']}`.")
@@ -435,7 +399,6 @@ else:
         except Exception as e:
             st.error(f"Database Error: {e}")
 
-    # 5. Insight View
     elif menu == "💡 Cyber Security Insights":
         st.title("💡 URL Defenses & Intelligence")
         st.image("https://img.freepik.com/free-photo/standard-quality-control-concept-m_23-2150041848.jpg", use_container_width=True)
@@ -453,7 +416,6 @@ else:
             fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', font_color="white")
             st.plotly_chart(fig, use_container_width=True)
 
-    # 6. API View
     elif menu == "📂 Developer API":
         st.title("📂 URL Scan API Portal")
         st.image("https://img.freepik.com/free-vector/api-concept-illustration_114360-9397.jpg", width=500)
