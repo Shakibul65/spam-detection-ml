@@ -16,10 +16,8 @@ import hashlib
 def get_db_connection():
     conn = sqlite3.connect('phishing_url_detector.db', check_same_thread=False)
     c = conn.cursor()
-    # স্ক্যান লগ টেবিল
     c.execute('''CREATE TABLE IF NOT EXISTS scan_logs 
                  (url TEXT, prediction TEXT, confidence REAL, timestamp TEXT, username TEXT)''')
-    # ইউজার অ্যাকাউন্ট টেবিল
     c.execute('''CREATE TABLE IF NOT EXISTS users 
                  (username TEXT UNIQUE, password TEXT, signup_date TEXT)''')
     conn.commit()
@@ -57,21 +55,93 @@ def login_user(username, password):
 # --- PAGE CONFIG ---
 st.set_page_config(page_title="Phishing URL Detector AI | Advanced Security", page_icon="🛡️", layout="wide")
 
+# --- ADVANCED CYBERPUNK/DARK DESIGN CSS ---
 st.markdown("""
     <style>
-    .main { background-color: #f4f7f6; }
-    .stButton>button { 
-        width: 100%; border-radius: 10px; height: 3.5em; 
-        background: linear-gradient(90deg, #00c6ff, #0072ff); 
-        color: white; font-weight: bold; border: none;
+    /* Global Background Override */
+    .stApp {
+        background: radial-gradient(circle at 50% 50%, #101622 0%, #080b11 100%) !important;
+        color: #e2e8f0 !important;
     }
+    
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] {
+        background-color: #0b0f19 !important;
+        border-right: 1px solid #1e293b;
+    }
+    
+    /* Cyber Glass Card for Auth */
+    .auth-container {
+        background: rgba(15, 23, 42, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(0, 198, 255, 0.2);
+        border-radius: 16px;
+        padding: 35px;
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        margin-top: 20px;
+        max-width: 750px;
+    }
+    
+    /* Neon Text Headings */
+    .cyber-title {
+        font-family: 'Courier New', monospace;
+        color: #00c6ff;
+        text-shadow: 0 0 10px rgba(0, 198, 255, 0.5);
+        font-weight: bold;
+        font-size: 2.2rem;
+        margin-bottom: 5px;
+    }
+    
+    .cyber-subtitle {
+        color: #64748b;
+        font-size: 1rem;
+        margin-bottom: 25px;
+    }
+    
+    /* Custom Status Cards for Dashboard Scan Results */
     .status-card { 
-        background: white; padding: 20px; border-radius: 12px; 
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 15px;
+        background: #0f172a; 
+        padding: 20px; 
+        border-radius: 12px; 
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2); 
+        margin-bottom: 15px;
         border-left: 5px solid #0072ff;
-        color: black;
+        border-top: 1px solid #1e293b;
+        border-right: 1px solid #1e293b;
+        border-bottom: 1px solid #1e293b;
+        color: white;
     }
-    .footer { text-align: center; color: #777; padding: 40px; }
+    
+    /* Glowing Action Buttons */
+    .stButton>button { 
+        width: 100%; 
+        border-radius: 8px; 
+        height: 3.5em; 
+        background: linear-gradient(90deg, #00c6ff, #0072ff); 
+        color: white !important; 
+        font-weight: bold; 
+        border: none;
+        box-shadow: 0 0 15px rgba(0, 114, 255, 0.4);
+        transition: all 0.3s ease;
+    }
+    .stButton>button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 0 25px rgba(0, 198, 255, 0.7);
+    }
+    
+    /* Style Label/Text Inputs slightly cleaner for dark theme */
+    label p {
+        color: #94a3b8 !important;
+        font-weight: 600;
+    }
+    
+    .footer { 
+        text-align: center; 
+        color: #475569; 
+        padding: 40px; 
+        font-family: monospace;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -142,7 +212,7 @@ if 'logged_in' not in st.session_state:
 if 'username' not in st.session_state:
     st.session_state['username'] = ""
 
-# --- SIDEBAR OUTSIDE / LOGIN SCREEN ---
+# --- SIDEBAR OVERALL BRANDING ---
 with st.sidebar:
     st.title("🛡️ URL Protection Panel")
     st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=90)
@@ -150,51 +220,66 @@ with st.sidebar:
     st.caption("Computer Science & Engineering")
     st.write("---")
 
+# --- AUTH PEGE SCREEN ---
 if not st.session_state['logged_in']:
-    # লগইন এবং রেজিস্ট্রেশন পেজ ইন্টারফেস
-    st.title("🔐 Access Control Matrix & Identity Portal")
     
-    auth_mode = st.radio("Choose Action", ["Sign In / Login", "Create Account / Register"])
+    # Custom HTML Container Open
+    st.markdown("""
+        <div class="auth-container">
+            <div class="cyber-title">🔑 Access Control & Identity Portal</div>
+            <div class="cyber-subtitle">Secure Multi-Model Machine Learning Benchmarking System</div>
+        </div>
+        """, unsafe_allow_html=True)
     
-    if auth_mode == "Create Account / Register":
-        st.subheader("📝 Registration Desk")
-        new_user = st.text_input("Choose a Unique Username", placeholder="e.g., shakib65")
-        new_password = st.text_input("Set Security Password", type='password')
-        confirm_password = st.text_input("Confirm Password", type='password')
+    # Form Columns
+    col_a, col_b = st.columns([2, 1])
+    
+    with col_a:
+        auth_mode = st.tabs(["🔒 Sign In / Login", "📝 Create Account / Register"])
         
-        if st.button("Register / SignUp Now"):
-            if new_user and new_password:
-                if new_password == confirm_password:
-                    success = add_user(new_user, new_password)
-                    if success:
-                        st.success("Account successfully created! Please switch to 'Sign In' to access dashboard.")
-                    else:
-                        st.error("Username already taken! Try another one.")
+        # TAB 1: LOGIN
+        with auth_mode[0]:
+            st.markdown("<br>", unsafe_allow_html=True)
+            username = st.text_input("Enter System Username", placeholder="shakib65", key="login_user")
+            password = st.text_input("Enter Security Password", type='password', key="login_pass")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Verify Identity & Access Dashboard 🔓"):
+                result = login_user(username, password)
+                if result:
+                    st.session_state['logged_in'] = True
+                    st.session_state['username'] = username
+                    st.success(f"Access Granted. Initializing Secure Session...")
+                    time.sleep(0.8)
+                    st.rerun()
                 else:
-                    st.warning("Passwords do not match!")
-            else:
-                st.warning("Please fill all the input fields.")
-
-    else:
-        st.subheader("🔑 Authentication Gateway")
-        username = st.text_input("Enter Username", placeholder="shakib65")
-        password = st.text_input("Enter Password", type='password')
-        
-        if st.button("Verify Identity & Login"):
-            result = login_user(username, password)
-            if result:
-                st.session_state['logged_in'] = True
-                st.session_state['username'] = username
-                st.success(f"Welcome back, {username}!")
-                time.sleep(0.5)
-                st.rerun()
-            else:
-                st.error("Invalid Username or Password. Please try again.")
+                    st.error("Authentication Failed: Invalid credentials.")
+                    
+        # TAB 2: REGISTER
+        with auth_mode[1]:
+            st.markdown("<br>", unsafe_allow_html=True)
+            new_user = st.text_input("Set Unique Username", placeholder="e.g., shakib65", key="reg_user")
+            new_password = st.text_input("Set Master Password", type='password', key="reg_pass")
+            confirm_password = st.text_input("Confirm Master Password", type='password', key="reg_pass_conf")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Generate Secure Identity Credentials 🛠️"):
+                if new_user and new_password:
+                    if new_password == confirm_password:
+                        success = add_user(new_user, new_password)
+                        if success:
+                            st.success("Identity Created! Click 'Sign In' tab to log in.")
+                        else:
+                            st.error("Database conflict: Username already deployment cluster.")
+                    else:
+                        st.warning("Encryption Mismatch: Passwords do not match.")
+                else:
+                    st.warning("Input required fields.")
 
 else:
     # --- LOGGED IN APPLICATION ---
     with st.sidebar:
-        st.markdown(f"**Current User:** `{st.session_state['username']}`")
+        st.markdown(f"**Authorized User:** `🟢 {st.session_state['username']}`")
         menu = st.radio("Applications", [
             "🏠 Master Dashboard", 
             "🔍 URL Phishing Detector AI", 
@@ -204,11 +289,11 @@ else:
             "📂 Developer API"
         ])
         st.write("---")
-        if st.button("Log Out 🚪"):
+        if st.button("Terminate Session 🚪"):
             st.session_state['logged_in'] = False
             st.session_state['username'] = ""
             st.rerun()
-        st.success("System Status: Online")
+        st.success("Core Status: Active")
 
     # 1. Dashboard View
     if menu == "🏠 Master Dashboard":
@@ -255,7 +340,6 @@ else:
                             "Status": "🚨 PHISHING" if res_text == 'PHISHING' else "✅ CLEAN"
                         })
                     
-                    # ডাটাবেসে ইউজার নেমসহ সেভ করা হচ্ছে
                     c = conn.cursor()
                     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     c.execute('INSERT INTO scan_logs VALUES (?,?,?,?,?)', 
@@ -268,10 +352,10 @@ else:
                         with cols[idx]:
                             st.markdown(f"""
                             <div class='status-card'>
-                                <h4>{r['Algorithm']}</h4>
-                                <hr style='margin: 8px 0;'>
-                                <p>Result: <b>{r['Status']}</b></p>
-                                <p>Confidence: <b>{r['Confidence']}</b></p>
+                                <h4 style='color: #00c6ff;'>{r['Algorithm']}</h4>
+                                <hr style='margin: 8px 0; border-color: #1e293b;'>
+                                <p>Result: <b style='color: white;'>{r['Status']}</b></p>
+                                <p>Confidence: <b style='color: #00c6ff;'>{r['Confidence']}</b></p>
                             </div>
                             """, unsafe_allow_html=True)
                             
@@ -303,7 +387,7 @@ else:
                                           title="Current Scan Confidence Level (%)",
                                           text="Confidence Delivered", color="Model Architecture",
                                           color_discrete_sequence=px.colors.qualitative.Set2)
-                        fig_comp.update_layout(yaxis_range=[0, 110])
+                        fig_comp.update_layout(yaxis_range=[0, 110], paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white")
                         st.plotly_chart(fig_comp, use_container_width=True)
                         
                     with b_col2:
@@ -311,11 +395,10 @@ else:
                                             title="Execution Speed / Latency (Lower is Better)", 
                                             markers=True, line_shape="spline")
                         fig_speed.update_traces(line_color='#0072ff', line_width=3, marker_size=10)
+                        fig_speed.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white")
                         st.plotly_chart(fig_speed, use_container_width=True)
                     
-                    st.dataframe(df_bench.style.highlight_max(axis=0, color='#d4edda', subset=["Accuracy Score (%)", "Confidence Delivered"])
-                                               .highlight_min(axis=0, color='#f8d7da', subset=["Inference Velocity (ms)"]), 
-                                 use_container_width=True)
+                    st.dataframe(df_bench, use_container_width=True)
                                  
             else:
                 st.warning("Please enter a URL first.")
@@ -331,7 +414,7 @@ else:
             if st.button("Analyze Batch URLs"):
                 st.info("Processing bulk link database...")
 
-    # 4. Database Log View (ফ্লিপ করা হয়েছে বর্তমান ইউজারের ভিত্তিতে ফিল্টার করার জন্য)
+    # 4. Database Log View
     elif menu == "🗄️ Database Logs":
         st.title("🗄️ URL Scan History")
         st.write(f"Displaying logs directly from SQLite database for `{st.session_state['username']}`.")
@@ -366,6 +449,7 @@ else:
             """)
         with tab2:
             fig = px.pie(names=['Phishing URLs', 'Malicious Redirects', 'Spam Links'], values=[55, 30, 15], hole=0.3)
+            fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', font_color="white")
             st.plotly_chart(fig, use_container_width=True)
 
     # 6. API View
