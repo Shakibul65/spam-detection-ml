@@ -123,6 +123,32 @@ st.markdown("""
         padding: 40px; 
         font-family: monospace;
     }
+    .sidebar-cyber-title {
+        font-family: 'Courier New', monospace;
+        color: #00c6ff;
+        text-shadow: 0 0 8px rgba(0, 198, 255, 0.6);
+        font-weight: bold;
+        font-size: 1.5rem;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        line-height: 1.2;
+    }
+    .sidebar-cyber-dev {
+        font-family: 'Courier New', monospace;
+        color: #00c6ff;
+        text-shadow: 0 0 5px rgba(0, 198, 255, 0.4);
+        font-weight: bold;
+        font-size: 1.1rem;
+        margin-top: 15px;
+        margin-bottom: 2px;
+    }
+    .sidebar-cyber-dept {
+        font-family: 'Courier New', monospace;
+        color: #00c6ff;
+        text-shadow: 0 0 4px rgba(0, 198, 255, 0.3);
+        font-size: 0.9rem;
+        opacity: 0.85;
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -193,10 +219,10 @@ if 'username' not in st.session_state:
     st.session_state['username'] = ""
 
 with st.sidebar:
-    st.title("🛡️ URL Phishing Detector")
+    st.markdown('<div class="sidebar-cyber-title">🛡️ URL Phishing Detector</div>', unsafe_allow_html=True)
     st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=90)
-    st.markdown("### Dev: Shakibul Hasan")
-    st.caption("Computer Science & Engineering")
+    st.markdown('<div class="sidebar-cyber-dev">Dev: Shakibul Hasan</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-cyber-dept">Computer Science & Engineering</div>', unsafe_allow_html=True)
     st.write("---")
 
 if not st.session_state['logged_in']:
