@@ -193,7 +193,7 @@ if 'username' not in st.session_state:
     st.session_state['username'] = ""
 
 with st.sidebar:
-    st.title("🛡️ URL Protection Panel")
+    st.title("🛡️ URL Phishing Detector")
     st.image("https://cdn-icons-png.flaticon.com/512/3135/3135715.png", width=90)
     st.markdown("### Dev: Shakibul Hasan")
     st.caption("Computer Science & Engineering")
@@ -337,9 +337,9 @@ else:
                             """, unsafe_allow_html=True)
                             
                             if r['Prediction'] == 'PHISHING':
-                                st.error(f"Threat Flagged!")
+                               _ = st.error(f"Threat Flagged!")
                             else:
-                                st.success(f"Clear!")
+                               _ = st.success(f"Clear!")
                     
                     st.write("---")
                     st.subheader("📊 Live Algorithm Performance Benchmarking")
