@@ -11,13 +11,15 @@ from datetime import datetime
 import time
 import hashlib
 
-# --- DATABASE SETUP ---
+# --- DATABASE SETUP (Fixed with v2 to avoid schema conflict) ---
 @st.cache_resource
 def get_db_connection():
-    conn = sqlite3.connect('phishing_url_detector.db', check_same_thread=False)
+    conn = sqlite3.connect('phishing_url_detector_v2.db', check_same_thread=False)
     c = conn.cursor()
+    # স্ক্যান লগ টেবিল (৫টি কলাম নিশ্চিত করা হয়েছে)
     c.execute('''CREATE TABLE IF NOT EXISTS scan_logs 
                  (url TEXT, prediction TEXT, confidence REAL, timestamp TEXT, username TEXT)''')
+    # ইউজার অ্যাকাউন্ট টেবিল
     c.execute('''CREATE TABLE IF NOT EXISTS users 
                  (username TEXT UNIQUE, password TEXT, signup_date TEXT)''')
     conn.commit()
@@ -220,10 +222,9 @@ with st.sidebar:
     st.caption("Computer Science & Engineering")
     st.write("---")
 
-# --- AUTH PEGE SCREEN ---
+# --- AUTH PAGE SCREEN ---
 if not st.session_state['logged_in']:
     
-    # Custom HTML Container Open
     st.markdown("""
         <div class="auth-container">
             <div class="cyber-title">🔑 Access Control & Identity Portal</div>
@@ -231,7 +232,6 @@ if not st.session_state['logged_in']:
         </div>
         """, unsafe_allow_html=True)
     
-    # Form Columns
     col_a, col_b = st.columns([2, 1])
     
     with col_a:
@@ -270,7 +270,7 @@ if not st.session_state['logged_in']:
                         if success:
                             st.success("Identity Created! Click 'Sign In' tab to log in.")
                         else:
-                            st.error("Database conflict: Username already deployment cluster.")
+                            st.error("Database conflict: Username already exists in deployment cluster.")
                     else:
                         st.warning("Encryption Mismatch: Passwords do not match.")
                 else:
@@ -311,7 +311,7 @@ else:
         chart_data = pd.DataFrame(np.random.randint(10, 100, size=(20, 2)), columns=['Malicious Links', 'Domain Spoofing'])
         st.line_chart(chart_data)
 
-    # 2. Scanning View
+    # 2. Scanning View (Fixed Database Query Insert Logic)
     elif menu == "🔍 URL Phishing Detector AI":
         st.title("🔍 Multi-Model Phishing URL Analysis Engine")
         st.caption("The backend engine runs 4 advanced models simultaneously to deliver real-time scanning and instant live benchmarking.")
@@ -340,6 +340,7 @@ else:
                             "Status": "🚨 PHISHING" if res_text == 'PHISHING' else "✅ CLEAN"
                         })
                     
+                    # ডাটাবেসে সেভ করা হচ্ছে (৫টি প্যারামিটার সঠিকভাবে ম্যাচ করা হয়েছে)
                     c = conn.cursor()
                     now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                     c.execute('INSERT INTO scan_logs VALUES (?,?,?,?,?)', 
