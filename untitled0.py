@@ -229,7 +229,7 @@ def load_url_models():
             'safe', 'safe'
         ]
     }
-    return data
+    # ফিক্সড: আগের কোডের অকাল 'return data' লাইনটি রিমুভ করা হয়েছে।
     df = pd.DataFrame(data)
     df['url'] = df['url'].str.lower()
     
@@ -410,9 +410,9 @@ else:
                             """, unsafe_allow_html=True)
                             
                             if r['Prediction'] == 'PHISHING':
-                               _ = st.error(f"Threat Flagged!")
+                               st.error(f"Threat Flagged!")
                             else:
-                               _ = st.success(f"Clear!")
+                               st.success(f"Clear!")
                     
                     st.write("---")
                     st.subheader("📊 Live Algorithm Performance Benchmarking")
