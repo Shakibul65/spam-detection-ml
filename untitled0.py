@@ -229,7 +229,6 @@ def load_url_models():
             'safe', 'safe'
         ]
     }
-    # ফিক্সড: আগের কোডের অকাল 'return data' লাইনটি রিমুভ করা হয়েছে।
     df = pd.DataFrame(data)
     df['url'] = df['url'].str.lower()
     
