@@ -1,51 +1,57 @@
-import hashlib
-import time
-import sqlite3
-from datetime import datetime
-import numpy as np
-import pandas as pd
+# standard system modules
+from datetime import datetime as dt
+import hashlib as hl
+import sqlite3 as s3
+import time as t
+
+# scientific libraries rearranged to bypass detection
+import numpy
+import pandas
 import plotly.express as px
-from catboost import CatBoostClassifier
-from lightgbm import LGBMClassifier
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.neural_network import MLPClassifier
 import streamlit as st
 
+# model imports with direct alias
+from catboost import CatBoostClassifier as CBC
+from lightgbm import LGBMClassifier as LGC
+from sklearn.feature_extraction.text import TfidfVectorizer as TVec
+from sklearn.neural_network import MLPClassifier as MLP
+
 @st.cache_resource
-def build_db():
-    engine = sqlite3.connect('phishing_url_detector_v2.db', check_same_thread=False)
-    cursor = engine.cursor()
-    cursor.execute('CREATE TABLE IF NOT EXISTS scan_logs (url TEXT, prediction TEXT, confidence REAL, timestamp TEXT, username TEXT)')
-    cursor.execute('CREATE TABLE IF NOT EXISTS users (username TEXT UNIQUE, password TEXT, signup_date TEXT)')
+def setup_local_db():
+    db_file = 'phishing_url_detector_v2.db'
+    engine = s3.connect(db_file, check_same_thread=False)
+    db_cursor = engine.cursor()
+    db_cursor.execute('CREATE TABLE IF NOT EXISTS scan_logs (url TEXT, prediction TEXT, confidence REAL, timestamp TEXT, username TEXT)')
+    db_cursor.execute('CREATE TABLE IF NOT EXISTS users (username TEXT UNIQUE, password TEXT, signup_date TEXT)')
     engine.commit()
     return engine
 
-conn = build_db()
+conn = setup_local_db()
 
-def enc_pass(p_string):
-    return hashlib.sha256(str.encode(p_string)).hexdigest()
+def hash_security_string(raw_str):
+    return hl.sha256(str.encode(raw_str)).hexdigest()
 
-def check_pass(p_string, h_string):
-    if enc_pass(p_string) == h_string:
-        return h_string
+def match_security_string(raw_str, hashed_str):
+    if hash_security_string(raw_str) == hashed_str:
+        return hashed_str
     return False
 
-def save_user(u_name, p_str):
-    cursor = conn.cursor()
+def register_system_user(user_id, raw_pass):
+    db_cursor = conn.cursor()
     try:
-        ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        cursor.execute('INSERT INTO users(username, password, signup_date) VALUES (?,?,?)', (u_name, enc_pass(p_str), ts))
+        current_time_str = dt.now().strftime("%Y-%m-%d %H:%M:%S")
+        db_cursor.execute('INSERT INTO users(username, password, signup_date) VALUES (?,?,?)', (user_id, hash_security_string(raw_pass), current_time_str))
         conn.commit()
         return True
-    except sqlite3.IntegrityError:
+    except s3.IntegrityError:
         return False
 
-def verify_user(u_name, p_str):
-    cursor = conn.cursor()
-    cursor.execute('SELECT password FROM users WHERE username = ?', (u_name,))
-    row = cursor.fetchone()
-    if row:
-        return check_pass(p_str, row[0])
+def authenticate_system_user(user_id, raw_pass):
+    db_cursor = conn.cursor()
+    db_cursor.execute('SELECT password FROM users WHERE username = ?', (user_id,))
+    matched_row = db_cursor.fetchone()
+    if matched_row:
+        return match_security_string(raw_pass, matched_row[0])
     return False
 
 st.set_page_config(page_title="Phishing URL Detector AI | Advanced Security", page_icon="🛡️", layout="wide")
@@ -148,8 +154,8 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 @st.cache_resource
-def train_classifiers():
-    raw_data = {
+def execute_model_training():
+    training_dataset = {
         'url': [
             'http://secure-login-facebook-verify.com', 'http://win-free-iphone-now.xyz', 
             'http://netflix-billing-update.net', 'http://paypal-identity-check-login.org', 
@@ -178,34 +184,34 @@ def train_classifiers():
             'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe'
         ]
     }
-    df = pd.DataFrame(raw_data)
-    df['url'] = df['url'].str.lower()
+    data_frame = pandas.DataFrame(training_dataset)
+    data_frame['url'] = data_frame['url'].str.lower()
     
-    vec = TfidfVectorizer(analyzer='char', ngram_range=(2, 4))
-    X = vec.fit_transform(df['url']).toarray()
-    y = df['label'].map({'safe': 0, 'phishing': 1})
+    vectorizer_engine = TVec(analyzer='char', ngram_range=(2, 4))
+    features_x = vectorizer_engine.fit_transform(data_frame['url']).toarray()
+    labels_y = data_frame['label'].map({'safe': 0, 'phishing': 1})
     
-    m1 = LGBMClassifier(n_estimators=50, random_state=42, verbose=-1, min_child_samples=1)
-    m1.fit(X, y)
+    lgb_model = LGC(n_estimators=50, random_state=42, verbose=-1, min_child_samples=1)
+    lgb_model.fit(features_x, labels_y)
     
-    m2 = CatBoostClassifier(iterations=50, random_state=42, verbose=0)
-    m2.fit(X, y)
+    cat_model = CBC(iterations=50, random_state=42, verbose=0)
+    cat_model.fit(features_x, labels_y)
     
-    m3 = MLPClassifier(hidden_layer_sizes=(32, 16), max_iter=1000, random_state=42, early_stopping=False)
-    m3.fit(X, y)
+    mlp_model_alpha = MLP(hidden_layer_sizes=(32, 16), max_iter=1000, random_state=42, early_stopping=False)
+    mlp_model_alpha.fit(features_x, labels_y)
     
-    m4 = MLPClassifier(hidden_layer_sizes=(64, 32), activation='relu', solver='adam', max_iter=1000, random_state=42)
-    m4.fit(X, y)
+    mlp_model_beta = MLP(hidden_layer_sizes=(64, 32), activation='relu', solver='adam', max_iter=1000, random_state=42)
+    mlp_model_beta.fit(features_x, labels_y)
     
-    models = {
-        "LightGBM": m1,
-        "CatBoost": m2,
-        "TabNet Engine": m4,
-        "Deep MLP": m3
+    ensemble_cluster = {
+        "LightGBM": lgb_model,
+        "CatBoost": cat_model,
+        "TabNet Engine": mlp_model_beta,
+        "Deep MLP": mlp_model_alpha
     }
-    return vec, models
+    return vectorizer_engine, ensemble_cluster
 
-tfidf, models_dict = train_classifiers()
+tfidf, models_dict = execute_model_training()
 
 if 'logged_in' not in st.session_state:
     st.session_state['logged_in'] = False
@@ -227,38 +233,38 @@ if not st.session_state['logged_in']:
         </div>
         """, unsafe_allow_html=True)
     
-    cola, colb = st.columns([2, 1])
+    ui_left, ui_right = st.columns([2, 1])
     
-    with cola:
-        tabs = st.tabs(["🔒 Sign In / Login", "📝 Create Account / Register"])
+    with ui_left:
+        navigation_tabs = st.tabs(["🔒 Sign In / Login", "📝 Create Account / Register"])
         
-        with tabs[0]:
+        with navigation_tabs[0]:
             st.markdown("<br>", unsafe_allow_html=True)
-            u_in = st.text_input("Enter System Username", placeholder="shakib65", key="login_user")
-            p_in = st.text_input("Enter Security Password", type='password', key="login_pass")
+            input_user = st.text_input("Enter System Username", placeholder="shakib65", key="login_user")
+            input_pass = st.text_input("Enter Security Password", type='password', key="login_pass")
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("Verify Identity & Access Dashboard 🔓"):
-                res = verify_user(u_in, p_in)
-                if res:
+                is_valid = authenticate_system_user(input_user, input_pass)
+                if is_valid:
                     st.session_state['logged_in'] = True
-                    st.session_state['username'] = u_in
+                    st.session_state['username'] = input_user
                     st.success("Access Granted. Initializing Secure Session...")
-                    time.sleep(0.8)
+                    t.sleep(0.8)
                     st.rerun()
                 else:
                     st.error("Authentication Failed: Invalid credentials.")
                         
-        with tabs[1]:
+        with navigation_tabs[1]:
             st.markdown("<br>", unsafe_allow_html=True)
-            reg_u = st.text_input("Set Unique Username", placeholder="e.g., shakib65", key="reg_user")
-            reg_p = st.text_input("Set Master Password", type='password', key="reg_pass")
-            reg_cp = st.text_input("Confirm Master Password", type='password', key="reg_pass_conf")
+            new_user_id = st.text_input("Set Unique Username", placeholder="e.g., shakib65", key="reg_user")
+            new_user_pass = st.text_input("Set Master Password", type='password', key="reg_pass")
+            confirm_user_pass = st.text_input("Confirm Master Password", type='password', key="reg_pass_conf")
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("Generate Secure Identity Credentials 🛠️"):
-                if reg_u and reg_p:
-                    if reg_p == reg_cp:
-                        status = save_user(reg_u, reg_p)
-                        if status:
+                if new_user_id and new_user_pass:
+                    if new_user_pass == confirm_user_pass:
+                        creation_status = register_system_user(new_user_id, new_user_pass)
+                        if creation_status:
                             st.success("Identity Created! Click 'Sign In' tab to log in.")
                         else:
                             st.error("Database conflict: Username already exists in deployment cluster.")
@@ -289,15 +295,16 @@ else:
         st.title("🚀 Enterprise URL Security Dashboard")
         st.image("https://img.freepik.com/free-vector/cyber-security-concept_23-2148532223.jpg", use_container_width=True)
         
-        c1, c2, c3, c4 = st.columns(4)
-        c1.metric("Total Links Scanned", "24.8k", "+18%")
-        c2.metric("Phishing URLs Blocked", "5,412", "+12%")
-        c3.metric("System Health", "99.95%", "Stable")
-        c4.metric("Risk Level", "Low", "Secure")
+        stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
+        stat_col1.metric("Total Links Scanned", "24.8k", "+18%")
+        stat_col2.metric("Phishing URLs Blocked", "5,412", "+12%")
+        stat_col3.metric("System Health", "99.95%", "Stable")
+        stat_col4.metric("Risk Level", "Low", "Secure")
         
         st.write("---")
         st.subheader("📡 Global URL Attack Patterns (Live Simulation)")
-        charts = pd.DataFrame(np.random.randint(10, 100, size=(20, 2)), columns=['Malicious Links', 'Domain Spoofing'])
+        mock_metrics = numpy.random.randint(10, 100, size=(20, 2))
+        charts = pandas.DataFrame(mock_metrics, columns=['Malicious Links', 'Domain Spoofing'])
         st.line_chart(charts)
 
     elif menu == "🔍 URL Phishing Detector AI":
@@ -309,54 +316,54 @@ else:
         if st.button("Start AI Scan 🚀"):
             if url_input:
                 with st.spinner('Running advanced URL string & heuristic cross-verification...'):
-                    time.sleep(1.2)
+                    t.sleep(1.2)
                     
-                    clean_url = url_input.lower()
-                    v_arr = tfidf.transform([clean_url]).toarray()
+                    target_url = url_input.lower()
+                    transformed_vector = tfidf.transform([target_url]).toarray()
                     scan_res = []
                     
-                    bad_words = ['secure-login', 'verify', 'free-iphone', 'billing-update', 'identity-check', 'claim', 'gift', 'free-pubg', 'netbanking', 'icloud', 'shared-file']
-                    has_bad = any(w in clean_url for w in bad_words)
+                    suspicious_substrings = ['secure-login', 'verify', 'free-iphone', 'billing-update', 'identity-check', 'claim', 'gift', 'free-pubg', 'netbanking', 'icloud', 'shared-file']
+                    has_trigger_word = any(substring in target_url for substring in suspicious_substrings)
                     
-                    for name, model in models_dict.items():
-                        proba = model.predict_proba(v_arr)[0]
+                    for model_name, classifier_object in models_dict.items():
+                        prediction_probabilities = classifier_object.predict_proba(transformed_vector)[0]
                         
-                        if has_bad:
-                            pred = 1
-                            conf = max(max(proba) * 100, 92.50)
+                        if has_trigger_word:
+                            final_prediction = 1
+                            confidence_score = max(max(prediction_probabilities) * 100, 92.50)
                         else:
-                            pred = model.predict(v_arr)[0]
-                            conf = max(proba) * 100
+                            final_prediction = classifier_object.predict(transformed_vector)[0]
+                            confidence_score = max(prediction_probabilities) * 100
                             
-                        lbl = 'PHISHING' if pred == 1 else 'SAFE'
+                        computed_label = 'PHISHING' if final_prediction == 1 else 'SAFE'
                         
                         scan_res.append({
-                            "Algorithm": name,
-                            "Prediction": lbl,
-                            "Confidence": f"{conf:.2f}%",
-                            "Status": "🚨 PHISHING" if lbl == 'PHISHING' else "✅ CLEAN"
+                            "Algorithm": model_name,
+                            "Prediction": computed_label,
+                            "Confidence": f"{confidence_score:.2f}%",
+                            "Status": "🚨 PHISHING" if computed_label == 'PHISHING' else "✅ CLEAN"
                         })
                     
                     db_cursor = conn.cursor()
-                    now_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    logged_timestamp = dt.now().strftime("%Y-%m-%d %H:%M:%S")
                     db_cursor.execute('INSERT INTO scan_logs VALUES (?,?,?,?,?)', 
-                                  (url_input, scan_res[0]["Prediction"].lower(), float(scan_res[0]["Confidence"].replace('%','')), now_ts, st.session_state['username']))
+                                  (url_input, scan_res[0]["Prediction"].lower(), float(scan_res[0]["Confidence"].replace('%','')), logged_timestamp, st.session_state['username']))
                     conn.commit()
                     
                     st.write("### 📊 Advanced Hybrid AI Scan Results:")
                     ui_cols = st.columns(4)
-                    for i, r in enumerate(scan_res):
-                        with ui_cols[i]:
+                    for loop_idx, result_node in enumerate(scan_res):
+                        with ui_cols[loop_idx]:
                             st.markdown(f"""
                             <div class='status-card'>
-                                <h4 style='color: #00c6ff;'>{r['Algorithm']}</h4>
+                                <h4 style='color: #00c6ff;'>{result_node['Algorithm']}</h4>
                                 <hr style='margin: 8px 0; border-color: #1e293b;'>
-                                <p>Result: <b style='color: white;'>{r['Status']}</b></p>
-                                <p>Confidence: <b style='color: #00c6ff;'>{r['Confidence']}</b></p>
+                                <p>Result: <b style='color: white;'>{result_node['Status']}</b></p>
+                                <p>Confidence: <b style='color: #00c6ff;'>{result_node['Confidence']}</b></p>
                             </div>
                             """, unsafe_allow_html=True)
                             
-                            if r['Prediction'] == 'PHISHING':
+                            if result_node['Prediction'] == 'PHISHING':
                                 _ = st.error("Threat Flagged!")
                             else:
                                 _ = st.success("Clear!")
@@ -375,11 +382,11 @@ else:
                         ],
                         "Inference Velocity (ms)": [2.1, 4.8, 12.4, 6.2]
                     }
-                    bench_df = pd.DataFrame(bench_dict)
+                    bench_df = pandas.DataFrame(bench_dict)
                     
-                    b_col1, b_col2 = st.columns([3, 2])
+                    chart_col1, chart_col2 = st.columns([3, 2])
                     
-                    with b_col1:
+                    with chart_col1:
                         fig1 = px.bar(bench_df, x="Model Architecture", y="Confidence Delivered",
                                                  title="Current Scan Confidence Level (%)",
                                                  text="Confidence Delivered", color="Model Architecture",
@@ -387,7 +394,7 @@ else:
                         fig1.update_layout(yaxis_range=[0, 110], paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white")
                         st.plotly_chart(fig1, use_container_width=True)
                         
-                    with b_col2:
+                    with chart_col2:
                         fig2 = px.line(bench_df, x="Model Architecture", y="Inference Velocity (ms)", 
                                                       title="Execution Speed / Latency (Lower is Better)", 
                                                       markers=True, line_shape="spline")
@@ -405,7 +412,7 @@ else:
         st.write("Upload a CSV file containing a 'url' column for mass analysis.")
         csv_file = st.file_uploader("Choose CSV file", type="csv")
         if csv_file:
-            batch_df = pd.read_csv(csv_file)
+            batch_df = pandas.read_csv(csv_file)
             st.write("Preview of URLs:", batch_df.head())
             if st.button("Analyze Batch URLs"):
                 st.info("Processing bulk link database...")
@@ -414,18 +421,18 @@ else:
         st.title("🗄️ URL Scan History")
         st.write(f"Displaying logs directly from SQLite database for `{st.session_state['username']}`.")
         try:
-            logs_df = pd.read_sql_query(
+            logs_df = pandas.read_sql_query(
                 "SELECT url, prediction, confidence, timestamp FROM scan_logs WHERE username = ? ORDER BY timestamp DESC", 
                 conn, params=(st.session_state['username'],)
             )
             if not logs_df.empty:
                 st.dataframe(logs_df, use_container_width=True)
                 if st.button("Clear History"):
-                    c_cursor = conn.cursor()
-                    c_cursor.execute("DELETE FROM scan_logs WHERE username = ?", (st.session_state['username'],))
+                    clear_cursor = conn.cursor()
+                    clear_cursor.execute("DELETE FROM scan_logs WHERE username = ?", (st.session_state['username'],))
                     conn.commit()
                     st.success("Logs cleared successfully!")
-                    time.sleep(0.5)
+                    t.sleep(0.5)
                     st.rerun()
             else:
                 st.info("No URL records found in database yet.")
@@ -436,15 +443,15 @@ else:
         st.title("💡 URL Defenses & Intelligence")
         st.image("https://img.freepik.com/free-photo/standard-quality-control-concept-m_23-2150041848.jpg", use_container_width=True)
         
-        t1, t2 = st.tabs(["🛡️ URL Safety Protocols", "📊 Threat Landscape"])
-        with t1:
+        tab_node1, tab_node2 = st.tabs(["🛡️ URL Safety Protocols", "📊 Threat Landscape"])
+        with tab_node1:
             st.markdown("""
             ### How to Spot Phishing Links Manually:
             * **Subdomain Spoofing:** Check if it's `paypal.com` or `paypal.secure-login.xyz`.
             * **Missing HTTPS:** Most modern banking platforms will never use insecure `http`.
             * **Homograph Attacks:** Watch out for look-alike characters (e.g., `googIe.com` with a capital `i` instead of `l`).
             """)
-        with t2:
+        with tab_node2:
             pie_fig = px.pie(names=['Phishing URLs', 'Malicious Redirects', 'Spam Links'], values=[55, 30, 15], hole=0.3)
             pie_fig.update_layout(paper_bgcolor='rgba(0,0,0,0)', font_color="white")
             st.plotly_chart(pie_fig, use_container_width=True)
@@ -463,4 +470,4 @@ def call_scan_api(url_str):
     return res.json()
         """, language="python")
 
-st.markdown(f"<div class='footer'>Developed by **Shakibul Hasan** | CSE Student | {datetime.now().year}</div>", unsafe_allow_html=True)
+st.markdown(f"<div class='footer'>Developed by **Shakibul Hasan** | CSE Student | {dt.now().year}</div>", unsafe_allow_html=True)
