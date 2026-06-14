@@ -153,6 +153,7 @@ st.markdown("""
 def load_url_models():
     data = {
         'url': [
+            # --- Phishing URLs (50 Samples) ---
             'http://secure-login-facebook-verify.com', 'http://win-free-iphone-now.xyz', 
             'http://netflix-billing-update.net', 'http://paypal-identity-check-login.org', 
             'http://amazon-gift-card-claim.click', 'http://update-your-bank-security.co',
@@ -161,7 +162,25 @@ def load_url_models():
             'http://bfa-netbanking-alert.com', 'http://appleid-verification-icloud.xyz',
             'http://whatsapp-gift-monies.club', 'http://secure-login-verify.com',
             'http://drive-google-com-shared-file.info', 'http://microsoft-office365-update.net',
+            'http://steam-community-free-skins.ru', 'http://dropbox-shared-document-view.cc',
+            'http://twitter-verify-badge-apply.xyz', 'http://spotify-premium-mod-free.net',
+            'http://chase-bank-alert-update.com', 'http://wells-fargo-security-verification.org',
+            'http://ebay-buyer-protection-claim.biz', 'http://linkedin-job-offer-verify.click',
+            'http://adobe-pdf-share-login.info', 'http://zoom-meeting-join-now.cn',
+            'http://coinbase-account-recovery-portal.net', 'http://binance-login-security-check.com',
+            'http://metamask-wallet-restore-key.io', 'http://fedex-package-tracking-delivery.info',
+            'http://dhl-shipping-invoice-update.cc', 'http://usps-address-confirm-redelivery.com',
+            'http://discord-nitro-free-giftcard.xyz', 'http://epicgames-free-vbucks-claim.net',
+            'http://roblox-robux-generator-free.club', 'http://bankofamerica-login-authorization.org',
+            'http://snapchat-account-unlock-verify.co', 'http://tiktok-creators-fund-apply.xyz',
+            'http://walmart-survey-rewards-winner.click', 'http://target-giftcard-holiday-bonus.com',
+            'http://bestbuy-order-status-pending.net', 'http://aliexpress-order-dispute-refund.cc',
+            'http://uber-driver-bonus-registration.info', 'http://airbnb-booking-payment-confirmation.org',
+            'http://booking-com-hotel-discount-deal.xyz', 'http://telegram-group-invite-join.net',
+            'http://skype-video-call-update-download.com', 'http://slack-workspace-invitation-accept.co',
+            'http://salesforce-crm-login-security.info', 'http://tax-refund-government-portal-gov.net',
             
+            # --- Safe / Benign URLs (50 Samples) ---
             'https://www.google.com', 'https://github.com/trending', 
             'https://www.linkedin.com/feed', 'https://stackoverflow.com',
             'https://www.wikipedia.org', 'https://medium.com',
@@ -169,17 +188,48 @@ def load_url_models():
             'https://aws.amazon.com', 'https://www.facebook.com',
             'https://www.instagram.com', 'https://www.netflix.com',
             'https://www.paypal.com', 'https://www.amazon.com',
-            'https://www.apple.com', 'https://www.whatsapp.com'
+            'https://www.apple.com', 'https://www.whatsapp.com',
+            'https://www.reddit.com', 'https://twitter.com',
+            'https://www.nytimes.com', 'https://www.bbc.com/news',
+            'https://www.cnn.com', 'https://www.pinterest.com',
+            'https://www.tumblr.com', 'https://www.imdb.com',
+            'https://www.quora.com', 'https://www.twitch.tv',
+            'https://www.spotify.com', 'https://www.dropbox.com',
+            'https://www.adobe.com', 'https://www.zoom.us',
+            'https://www.cloudflare.com', 'https://www.digitalocean.com',
+            'https://www.salesforce.com', 'https://www.ebay.com',
+            'https://www.walmart.com', 'https://www.target.com',
+            'https://www.bestbuy.com', 'https://www.aliexpress.com',
+            'https://www.booking.com', 'https://www.airbnb.com',
+            'https://www.uber.com', 'https://www.telegram.org',
+            'https://www.slack.com', 'https://www.discord.com',
+            'https://www.roblox.com', 'https://www.epicgames.com',
+            'https://www.steamcommunity.com', 'https://www.coinbase.com',
+            'https://www.binance.com', 'https://metamask.io'
         ],
         'label': [
+            # 50 Phishing Labels
             'phishing', 'phishing', 'phishing', 'phishing', 'phishing', 'phishing',
             'phishing', 'phishing', 'phishing', 'phishing', 'phishing', 'phishing',
-            'phishing', 'phishing', 'phishing', 'phishing',
+            'phishing', 'phishing', 'phishing', 'phishing', 'phishing', 'phishing',
+            'phishing', 'phishing', 'phishing', 'phishing', 'phishing', 'phishing',
+            'phishing', 'phishing', 'phishing', 'phishing', 'phishing', 'phishing',
+            'phishing', 'phishing', 'phishing', 'phishing', 'phishing', 'phishing',
+            'phishing', 'phishing', 'phishing', 'phishing', 'phishing', 'phishing',
+            'phishing', 'phishing', 'phishing', 'phishing', 'phishing', 'phishing',
+            'phishing', 'phishing',
             
+            # 50 Safe Labels
             'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe',
-            'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe'
+            'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe',
+            'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe',
+            'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe',
+            'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe',
+            'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe', 'safe',
+            'safe', 'safe'
         ]
     }
+    return data
     df = pd.DataFrame(data)
     df['url'] = df['url'].str.lower()
     
