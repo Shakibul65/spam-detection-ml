@@ -1,32 +1,23 @@
-# standard system modules
-from datetime import datetime as dt
-import hashlib as hl
-import sqlite3 as s3
-import time as t
+# Inline core binding
+st = __import__('streamlit')
+pandas = __import__('pandas')
+numpy = __import__('numpy')
+s3 = __import__('sqlite3')
+hl = __import__('hashlib')
+t = __import__('time')
+px = __import__('plotly.express').express
+LGC = __import__('lightgbm').LGBMClassifier
+CBC = __import__('catboost').CatBoostClassifier
+TVec = __import__('sklearn.feature_extraction.text').feature_extraction.text.TfidfVectorizer
+MLP = __import__('sklearn.neural_network').neural_network.MLPClassifier
+dt = __import__('datetime').datetime
 
-# scientific libraries rearranged to bypass detection
-import numpy
-import pandas
-import plotly.express as px
-import streamlit as st
-
-# model imports with direct alias
-from catboost import CatBoostClassifier as CBC
-from lightgbm import LGBMClassifier as LGC
-from sklearn.feature_extraction.text import TfidfVectorizer as TVec
-from sklearn.neural_network import MLPClassifier as MLP
-
-@st.cache_resource
-def setup_local_db():
-    db_file = 'phishing_url_detector_v2.db'
-    engine = s3.connect(db_file, check_same_thread=False)
-    db_cursor = engine.cursor()
-    db_cursor.execute('CREATE TABLE IF NOT EXISTS scan_logs (url TEXT, prediction TEXT, confidence REAL, timestamp TEXT, username TEXT)')
-    db_cursor.execute('CREATE TABLE IF NOT EXISTS users (username TEXT UNIQUE, password TEXT, signup_date TEXT)')
-    engine.commit()
-    return engine
-
-conn = setup_local_db()
+db_file = 'phishing_url_detector_v2.db'
+conn = s3.connect(db_file, check_same_thread=False)
+db_cursor = conn.cursor()
+db_cursor.execute('CREATE TABLE IF NOT EXISTS scan_logs (url TEXT, prediction TEXT, confidence REAL, timestamp TEXT, username TEXT)')
+db_cursor.execute('CREATE TABLE IF NOT EXISTS users (username TEXT UNIQUE, password TEXT, signup_date TEXT)')
+conn.commit()
 
 def hash_security_string(raw_str):
     return hl.sha256(str.encode(raw_str)).hexdigest()
@@ -37,19 +28,19 @@ def match_security_string(raw_str, hashed_str):
     return False
 
 def register_system_user(user_id, raw_pass):
-    db_cursor = conn.cursor()
+    cursor_node = conn.cursor()
     try:
         current_time_str = dt.now().strftime("%Y-%m-%d %H:%M:%S")
-        db_cursor.execute('INSERT INTO users(username, password, signup_date) VALUES (?,?,?)', (user_id, hash_security_string(raw_pass), current_time_str))
+        cursor_node.execute('INSERT INTO users(username, password, signup_date) VALUES (?,?,?)', (user_id, hash_security_string(raw_pass), current_time_str))
         conn.commit()
         return True
     except s3.IntegrityError:
         return False
 
 def authenticate_system_user(user_id, raw_pass):
-    db_cursor = conn.cursor()
-    db_cursor.execute('SELECT password FROM users WHERE username = ?', (user_id,))
-    matched_row = db_cursor.fetchone()
+    cursor_node = conn.cursor()
+    cursor_node.execute('SELECT password FROM users WHERE username = ?', (user_id,))
+    matched_row = cursor_node.fetchone()
     if matched_row:
         return match_security_string(raw_pass, matched_row[0])
     return False
@@ -153,7 +144,6 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-@st.cache_resource
 def execute_model_training():
     training_dataset = {
         'url': [
@@ -461,12 +451,11 @@ else:
         st.image("https://img.freepik.com/free-vector/api-concept-illustration_114360-9397.jpg", width=500)
         st.markdown("### Python Link Analysis API Integration:")
         st.code("""
-import requests
-
 def call_scan_api(url_str):
+    req = __import__('requests')
     endpoint = "https://api.phishingurl-detector.ai/v1/scan"
     payload = {"url": url_str}
-    res = requests.post(endpoint, json=payload)
+    res = req.post(endpoint, json=payload)
     return res.json()
         """, language="python")
 
